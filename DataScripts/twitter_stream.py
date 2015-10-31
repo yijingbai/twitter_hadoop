@@ -3,12 +3,14 @@ from tweepy.streaming import StreamListener
 from tweepy import OAuthHandler
 from tweepy import Stream
 import logging
+import datetime
+import time
 
 logger = logging.getLogger('tweet_data_crawler')
 logger.setLevel(logging.DEBUG)
-fh = logging.FileHandler('tweet_data_crawler.log')
+fh = logging.FileHandler('log/tweet_data_crawler.log')
 fh.setLevel(logging.DEBUG)
-formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+formatter = logging.Formatter('%(asctime)s - %(levelname)s [%(lineno)s]: %(message)s')
 fh.setFormatter(formatter)
 logger.addHandler(fh)
 
@@ -21,12 +23,21 @@ consumer_secret = "GP7K5SIfUrSPQ110fKKVgZX590pjlst0KUIQizhKyyJoIzGldu"
 #This is a basic listener that just prints received tweets to stdout.
 class StdOutListener(StreamListener):
 
+    def get_file_name(self):
+        """
+            2015_10_30_01_data
+        """
+
+        return datetime.datetime.fromtimestamp(time.time()).strftime('%Y_%m_%d_%H_data')
+
     def on_data(self, data):
-        print data
+        with open("data/" + self.get_file_name(), 'a') as f:
+            f.write(data)
         return True
 
     def on_error(self, status):
-        print status
+        logger.error("The Data Collector failed, the error code is %d", status)
+        time.sleep(60)
 
 
 if __name__ == '__main__':
