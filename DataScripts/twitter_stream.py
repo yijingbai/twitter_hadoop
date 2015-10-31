@@ -2,8 +2,16 @@
 from tweepy.streaming import StreamListener
 from tweepy import OAuthHandler
 from tweepy import Stream
+import logging
 
-#Variables that contains the user credentials to access Twitter API
+logger = logging.getLogger('tweet_data_crawler')
+logger.setLevel(logging.DEBUG)
+fh = logging.FileHandler('tweet_data_crawler.log')
+fh.setLevel(logging.DEBUG)
+formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+fh.setFormatter(formatter)
+logger.addHandler(fh)
+
 access_token = "467470574-fwdfwPrR7xY4jZyiBR8wBEoXcKsEPRlml7jov8XH"
 access_token_secret = "3XM6g8QJEKobvONLBOW8FFJvYnfrUqDCINeHqIDMk"
 consumer_key = "U6sR2gmXylI5RX8C2z7PA"
@@ -25,9 +33,13 @@ if __name__ == '__main__':
 
     #This handles Twitter authetification and the connection to Twitter Streaming API
     l = StdOutListener()
+    logger.info("Init StdOutListener")
     auth = OAuthHandler(consumer_key, consumer_secret)
     auth.set_access_token(access_token, access_token_secret)
     stream = Stream(auth, l)
 
     #This line filter Twitter Streams to capture data by the keywords: 'python', 'javascript', 'ruby'
-    stream.sample()
+    try:
+        stream.sample()
+    except Exception as e:
+        logger.error("The sampling is failed, try to restart")
