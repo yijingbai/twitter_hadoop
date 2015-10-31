@@ -12,10 +12,10 @@ formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(messag
 fh.setFormatter(formatter)
 logger.addHandler(fh)
 
-access_token = "467470574-fwdfwPrR7xY4jZyiBR8wBEoXcKsEPRlml7jov8XH"
-access_token_secret = "3XM6g8QJEKobvONLBOW8FFJvYnfrUqDCINeHqIDMk"
-consumer_key = "U6sR2gmXylI5RX8C2z7PA"
-consumer_secret = "7IeP4vZ5Vd2GfnuaRPLvatNhIwrbEQDI9GB5yrME"
+access_token = "4079143643-cjGRCiPUvjpn1BXQeC1fIPLHzvhe4sDiyyVBTGb"
+access_token_secret = "9wy5F7oBveW738MN2dccvkhbOxm7I4ucFRnYjAhTpCamB"
+consumer_key = "ewu6uVlmrIsBon3VbmZrTzQQB"
+consumer_secret = "GP7K5SIfUrSPQ110fKKVgZX590pjlst0KUIQizhKyyJoIzGldu"
 
 
 #This is a basic listener that just prints received tweets to stdout.
