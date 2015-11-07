@@ -47,7 +47,7 @@ public class Reducer1 extends Reducer<Text, Text, Text, Text> {
 			e1.printStackTrace();
 		}
 		while (iter.hasNext()) {
-			Text text = (Text) iter.next();
+			Text text = iter.next();
 			String[] str = text.toString().split(" ");
 			if (!key.toString().equals(str[0])) {
 				if (str[5].equals("[]")) {
@@ -70,7 +70,7 @@ public class Reducer1 extends Reducer<Text, Text, Text, Text> {
 	public Text valueText(String[] str, List<String> adjList) {
 		StringBuilder sb = new StringBuilder();
 		
-		for (int i = 0; i < 5; i++) {
+		for (int i = 0; i < str.length - 1; i++) {
 			sb.append(str[i]);
 			sb.append(' ');
 		}

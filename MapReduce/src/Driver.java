@@ -21,23 +21,26 @@ public class Driver {
 	
 	public static void main(String[] args) throws Exception {
 		Path inputPath = new Path("/Users/dannywang/hadoop-2.7.1/input");
-		Path outputPath1 = new Path("/Users/dannywang/hadoop-2.7.1/output1");
-		Path outputPath2 = new Path("/Users/dannywang/hadoop-2.7.1/output2");
-		allPathFound = false;
-		while (!allPathFound) {
-			allPathFound = true;
-			job1(inputPath, outputPath1);
-			job2(outputPath1, outputPath2);
-			inputPath = outputPath2;
-		}
 		
-		Path outputPath3 = new Path("/Users/dannywang/hadoop-2.7.1/output3");
-		job3(outputPath2, outputPath3);
-		
-		Path outputPath4 = new Path("/Users/dannywang/hadoop-2.7.1/output4");
-		job4(outputPath3, outputPath4);
-		
-		Path outputPath5 = new Path("/Users/dannywang/hadoop-2.7.1/output5");
+			Path outputPath1 = new Path("/Users/dannywang/hadoop-2.7.1/output1");
+			Path outputPath2 = new Path("/Users/dannywang/hadoop-2.7.1/output2");
+			allPathFound = false;
+			while (!allPathFound) {
+				allPathFound = true;
+				job1(inputPath, outputPath1);
+				job2(outputPath1, outputPath2);
+				inputPath = outputPath2;
+			}
+			
+			Path outputPath3 = new Path("/Users/dannywang/hadoop-2.7.1/output3");
+			job3(outputPath2, outputPath3);
+			
+			Path outputPath4 = new Path("/Users/dannywang/hadoop-2.7.1/output4");
+			job4(outputPath3, outputPath4);
+			
+			Path outputPath5 = new Path("/Users/dannywang/hadoop-2.7.1/output5");
+			job5(outputPath2, outputPath5);
+			inputPath = outputPath5;
 	}
 	
 	private static void job1(Path inputPath, Path outputPath) throws Exception {
@@ -122,10 +125,10 @@ public class Driver {
 		job.setJarByClass(Driver.class);
 		job.setMapperClass(Mapper5.class);
 		job.setReducerClass(Reducer5.class);
-		//job.setMapOutputKeyClass(Text.class);
-		//job.setMapOutputValueClass(Text.class);
-		//job.setOutputKeyClass(Text.class);
-		//job.setOutputValueClass(DoubleWritable.class);
+		job.setMapOutputKeyClass(Text.class);
+		job.setMapOutputValueClass(Text.class);
+		job.setOutputKeyClass(Text.class);
+		job.setOutputValueClass(Text.class);
 		
 		FileSystem fs = FileSystem.get(new URI(outputPath.toString()), conf);
 		fs.delete(outputPath);
