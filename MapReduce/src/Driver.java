@@ -17,7 +17,11 @@ import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 
 public class Driver {
 	public static boolean allPathFound;
-	public static HashMap<String, List<String>> edgesSelected;
+	public static boolean allCommunityFound;
+	public static long communityNum;
+	public static int mapSize = 1024;  // fixed size for hash map
+	public static HashMap<String, List<String>> edgesSelected;	
+	public static HashMap<String, String> communityBelonged;  //<user, community#>
 	
 	public static void main(String[] args) throws Exception {
 		Path inputPath = new Path("/Users/dannywang/hadoop-2.7.1/input");
@@ -41,9 +45,32 @@ public class Driver {
 			Path outputPath5 = new Path("/Users/dannywang/hadoop-2.7.1/output5");
 			job5(outputPath2, outputPath5);
 			inputPath = outputPath5;
-			
+		
+		// job6 is to generate output for visualization (after detecting community)
 		Path outputPath6 = new Path("/Users/dannywang/hadoop-2.7.1/output6");
 		job6(outputPath5, outputPath6);
+		
+		// start to group users into community
+		Path outputPath7 = new Path("/Users/dannywang/hadoop-2.7.1/output7");
+		communityNum = 0;
+		job7(outputPath5, outputPath7);
+		
+		Path outputPath8 = new Path("/Users/dannywang/hadoop-2.7.1/output8");
+		Path outputPath9 = new Path("/Users/dannywang/hadoop-2.7.1/output9");
+		allCommunityFound = false;
+		while (!allCommunityFound) {
+			allCommunityFound = true;
+			communityBelonged = new HashMap<String, String>();
+			job8(outputPath7, outputPath8);
+			job9(outputPath7, outputPath9);
+			Path temp = outputPath7;
+			outputPath7 = outputPath9;
+			outputPath9 = temp;
+		}
+		
+		Path outputPath10 = new Path("/Users/dannywang/hadoop-2.7.1/output10");
+		communityNum = 0;
+		job10(outputPath7, outputPath10);
 	}
 	
 	private static void job1(Path inputPath, Path outputPath) throws Exception {
@@ -148,6 +175,82 @@ public class Driver {
 		job.setMapperClass(Mapper6.class);
 		//job.setReducerClass(Reducer6.class);
 		job.setMapOutputKeyClass(Text.class);
+		job.setMapOutputValueClass(Text.class);
+		//job.setOutputKeyClass(Text.class);
+		//job.setOutputValueClass(Text.class);
+		
+		FileSystem fs = FileSystem.get(new URI(outputPath.toString()), conf);
+		fs.delete(outputPath);
+		FileInputFormat.addInputPath(job, inputPath);
+		FileOutputFormat.setOutputPath(job, outputPath);
+		
+		System.out.println(job.waitForCompletion(true) ? "Success" : "Fail");
+	}
+	
+	private static void job7(Path inputPath, Path outputPath) throws Exception {
+		Configuration conf = new Configuration();
+		Job job = Job.getInstance(conf, "adding communityNum");
+		job.setJarByClass(Driver.class);
+		job.setMapperClass(Mapper7.class);
+		job.setReducerClass(Reducer7.class);
+		job.setMapOutputKeyClass(Text.class);
+		job.setMapOutputValueClass(Text.class);
+		job.setOutputKeyClass(LongWritable.class);
+		job.setOutputValueClass(Text.class);
+		
+		FileSystem fs = FileSystem.get(new URI(outputPath.toString()), conf);
+		fs.delete(outputPath);
+		FileInputFormat.addInputPath(job, inputPath);
+		FileOutputFormat.setOutputPath(job, outputPath);
+		
+		System.out.println(job.waitForCompletion(true) ? "Success" : "Fail");
+	}
+	
+	private static void job8(Path inputPath, Path outputPath) throws Exception {
+		Configuration conf = new Configuration();
+		Job job = Job.getInstance(conf, "selecting the smallest communityNum");
+		job.setJarByClass(Driver.class);
+		job.setMapperClass(Mapper8.class);
+		job.setReducerClass(Reducer8.class);
+		job.setMapOutputKeyClass(Text.class);
+		job.setMapOutputValueClass(Text.class);
+		job.setOutputKeyClass(Text.class);
+		job.setOutputValueClass(Text.class);
+		
+		FileSystem fs = FileSystem.get(new URI(outputPath.toString()), conf);
+		fs.delete(outputPath);
+		FileInputFormat.addInputPath(job, inputPath);
+		FileOutputFormat.setOutputPath(job, outputPath);
+		
+		System.out.println(job.waitForCompletion(true) ? "Success" : "Fail");
+	}
+	
+	private static void job9(Path inputPath, Path outputPath) throws Exception {
+		Configuration conf = new Configuration();
+		Job job = Job.getInstance(conf, "updating communityNum");
+		job.setJarByClass(Driver.class);
+		job.setMapperClass(Mapper9.class);
+		job.setReducerClass(Reducer9.class);
+		job.setMapOutputKeyClass(Text.class);
+		job.setMapOutputValueClass(Text.class);
+		job.setOutputKeyClass(Text.class);
+		job.setOutputValueClass(Text.class);
+		
+		FileSystem fs = FileSystem.get(new URI(outputPath.toString()), conf);
+		fs.delete(outputPath);
+		FileInputFormat.addInputPath(job, inputPath);
+		FileOutputFormat.setOutputPath(job, outputPath);
+		
+		System.out.println(job.waitForCompletion(true) ? "Success" : "Fail");
+	}
+	
+	private static void job10(Path inputPath, Path outputPath) throws Exception {
+		Configuration conf = new Configuration();
+		Job job = Job.getInstance(conf, "adding communityNum");
+		job.setJarByClass(Driver.class);
+		job.setMapperClass(Mapper10.class);
+		//job.setReducerClass(Reducer10.class);
+		job.setMapOutputKeyClass(LongWritable.class);
 		job.setMapOutputValueClass(Text.class);
 		//job.setOutputKeyClass(Text.class);
 		//job.setOutputValueClass(Text.class);

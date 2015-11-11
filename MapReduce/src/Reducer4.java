@@ -30,8 +30,10 @@ public class Reducer4 extends Reducer<Text, Text, Text, DoubleWritable> {
 				if (Driver.edgesSelected.containsKey(source)) {
 					Driver.edgesSelected.get(source).add(target);
 				} else {
-					Driver.edgesSelected.put(source, new ArrayList<String>());
-					Driver.edgesSelected.get(source).add(target);
+					if (Driver.edgesSelected.size() < Driver.mapSize) {
+						Driver.edgesSelected.put(source, new ArrayList<String>());
+						Driver.edgesSelected.get(source).add(target);
+					}
 				}
 			}
 		}
