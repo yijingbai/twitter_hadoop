@@ -53,7 +53,7 @@ public class TwitterDataExtract {
                    adjList.add(val.toString());
                 }
                 
-                context.write(NullWritable.get(), valueText(key.toString(), key.toString(), 0, 0, "active", pathList, adjList));
+                context.write(NullWritable.get(), valueText(key.toString(), key.toString(), 0, 1, "active", pathList, adjList));
             }catch(JSONException e){
                 e.printStackTrace();
             }
