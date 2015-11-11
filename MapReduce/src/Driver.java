@@ -21,7 +21,7 @@ public class Driver {
 	
 	public static void main(String[] args) throws Exception {
 		Path inputPath = new Path("/Users/dannywang/hadoop-2.7.1/input");
-		
+		// need a loop
 			Path outputPath1 = new Path("/Users/dannywang/hadoop-2.7.1/output1");
 			Path outputPath2 = new Path("/Users/dannywang/hadoop-2.7.1/output2");
 			allPathFound = false;
@@ -41,6 +41,9 @@ public class Driver {
 			Path outputPath5 = new Path("/Users/dannywang/hadoop-2.7.1/output5");
 			job5(outputPath2, outputPath5);
 			inputPath = outputPath5;
+			
+		Path outputPath6 = new Path("Users/dannywang/hadoop-2.7.1/output6");
+		job6(outputPath5, outputPath6);
 	}
 	
 	private static void job1(Path inputPath, Path outputPath) throws Exception {
@@ -121,7 +124,7 @@ public class Driver {
 	
 	private static void job5(Path inputPath, Path outputPath) throws Exception {
 		Configuration conf = new Configuration();
-		Job job = Job.getInstance(conf, "selecting edges to be removed");
+		Job job = Job.getInstance(conf, "removing edges selected");
 		job.setJarByClass(Driver.class);
 		job.setMapperClass(Mapper5.class);
 		job.setReducerClass(Reducer5.class);
@@ -129,6 +132,25 @@ public class Driver {
 		job.setMapOutputValueClass(Text.class);
 		job.setOutputKeyClass(Text.class);
 		job.setOutputValueClass(Text.class);
+		
+		FileSystem fs = FileSystem.get(new URI(outputPath.toString()), conf);
+		fs.delete(outputPath);
+		FileInputFormat.addInputPath(job, inputPath);
+		FileOutputFormat.setOutputPath(job, outputPath);
+		
+		System.out.println(job.waitForCompletion(true) ? "Success" : "Fail");
+	}
+	
+	private static void job6(Path inputPath, Path outputPath) throws Exception {
+		Configuration conf = new Configuration();
+		Job job = Job.getInstance(conf, "generating output");
+		job.setJarByClass(Driver.class);
+		job.setMapperClass(Mapper5.class);
+		//job.setReducerClass(Reducer5.class);
+		job.setMapOutputKeyClass(Text.class);
+		job.setMapOutputValueClass(Text.class);
+		//job.setOutputKeyClass(Text.class);
+		//job.setOutputValueClass(Text.class);
 		
 		FileSystem fs = FileSystem.get(new URI(outputPath.toString()), conf);
 		fs.delete(outputPath);
