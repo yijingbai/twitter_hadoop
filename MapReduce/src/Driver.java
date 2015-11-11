@@ -42,7 +42,7 @@ public class Driver {
 			job5(outputPath2, outputPath5);
 			inputPath = outputPath5;
 			
-		Path outputPath6 = new Path("Users/dannywang/hadoop-2.7.1/output6");
+		Path outputPath6 = new Path("/Users/dannywang/hadoop-2.7.1/output6");
 		job6(outputPath5, outputPath6);
 	}
 	
@@ -143,10 +143,10 @@ public class Driver {
 	
 	private static void job6(Path inputPath, Path outputPath) throws Exception {
 		Configuration conf = new Configuration();
-		Job job = Job.getInstance(conf, "generating output");
+		Job job = Job.getInstance(conf, "generating output for visualization");
 		job.setJarByClass(Driver.class);
-		job.setMapperClass(Mapper5.class);
-		//job.setReducerClass(Reducer5.class);
+		job.setMapperClass(Mapper6.class);
+		//job.setReducerClass(Reducer6.class);
 		job.setMapOutputKeyClass(Text.class);
 		job.setMapOutputValueClass(Text.class);
 		//job.setOutputKeyClass(Text.class);
