@@ -20,43 +20,50 @@ public class Driver {
 	public static boolean allCommunityFound;
 	public static long communityNum;
 	public static int mapSize = 1024;  // fixed size for hash map
-	public static HashMap<String, List<String>> edgesSelected;	
+	public static HashMap<String, List<String>> edgesSelected = new HashMap<>();	
 	public static HashMap<String, String> communityBelonged;  //<user, community#>
 	
 	public static void main(String[] args) throws Exception {
-		Path inputPath = new Path("/Users/dannywang/hadoop-2.7.1/input");
-		// need a loop
-			Path outputPath1 = new Path("/Users/dannywang/hadoop-2.7.1/output1");
-			Path outputPath2 = new Path("/Users/dannywang/hadoop-2.7.1/output2");
+		Path inputPath = new Path(args[0]);
+		Path outputPath0 = new Path(args[1] + "/output0");
+		job0(inputPath, outputPath0);
+		
+		while (true) {
+			Path outputPath1 = new Path(args[1] + "/output1");
+			Path outputPath2 = new Path(args[1] + "/output2");
 			allPathFound = false;
 			while (!allPathFound) {
 				allPathFound = true;
-				job1(inputPath, outputPath1);
+				job1(outputPath0, outputPath1);
 				job2(outputPath1, outputPath2);
-				inputPath = outputPath2;
+				outputPath0 = outputPath2;
 			}
 			
-			Path outputPath3 = new Path("/Users/dannywang/hadoop-2.7.1/output3");
+			Path outputPath3 = new Path(args[1] + "/output3");
 			job3(outputPath2, outputPath3);
 			
-			Path outputPath4 = new Path("/Users/dannywang/hadoop-2.7.1/output4");
+			Path outputPath4 = new Path(args[1] + "/output4");
 			job4(outputPath3, outputPath4);
 			
-			Path outputPath5 = new Path("/Users/dannywang/hadoop-2.7.1/output5");
+			if (edgesSelected.isEmpty())
+				break;
+			
+			Path outputPath5 = new Path(args[1] + "/output5");
 			job5(outputPath2, outputPath5);
-			inputPath = outputPath5;
+			outputPath0 = outputPath5;
+		}
 		
 		// job6 is to generate output for visualization (after detecting community)
-		Path outputPath6 = new Path("/Users/dannywang/hadoop-2.7.1/output6");
-		job6(outputPath5, outputPath6);
+		Path outputPath6 = new Path(args[1] + "/output6");
+		job6(outputPath0, outputPath6);
 		
 		// start to group users into community
-		Path outputPath7 = new Path("/Users/dannywang/hadoop-2.7.1/output7");
+		Path outputPath7 = new Path(args[1] + "/output7");
 		communityNum = 0;
-		job7(outputPath5, outputPath7);
+		job7(outputPath0, outputPath7);
 		
-		Path outputPath8 = new Path("/Users/dannywang/hadoop-2.7.1/output8");
-		Path outputPath9 = new Path("/Users/dannywang/hadoop-2.7.1/output9");
+		Path outputPath8 = new Path(args[1] + "/output8");
+		Path outputPath9 = new Path(args[1] + "/output9");
 		allCommunityFound = false;
 		while (!allCommunityFound) {
 			allCommunityFound = true;
@@ -68,9 +75,28 @@ public class Driver {
 			outputPath9 = temp;
 		}
 		
-		Path outputPath10 = new Path("/Users/dannywang/hadoop-2.7.1/output10");
+		Path outputPath10 = new Path(args[1] + "/output10");
 		communityNum = 0;
 		job10(outputPath7, outputPath10);
+	}
+	
+	private static void job0(Path inputPath, Path outputPath) throws Exception {
+		Configuration conf = new Configuration();
+		Job job = Job.getInstance(conf, "generating input format");
+		job.setJarByClass(Driver.class);
+		job.setMapperClass(Mapper0.class);
+		job.setReducerClass(Reducer0.class);
+		job.setMapOutputKeyClass(Text.class);
+		job.setMapOutputValueClass(Text.class);
+		job.setOutputKeyClass(Text.class);
+		job.setOutputValueClass(Text.class);
+		
+		FileSystem fs = FileSystem.get(new URI(outputPath.toString()), conf);
+		fs.delete(outputPath);
+		FileInputFormat.addInputPath(job, inputPath);
+		FileOutputFormat.setOutputPath(job, outputPath);
+		
+		System.out.println(job.waitForCompletion(true) ? "Success" : "Fail");
 	}
 	
 	private static void job1(Path inputPath, Path outputPath) throws Exception {

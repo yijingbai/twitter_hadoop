@@ -14,6 +14,7 @@ import org.apache.hadoop.mapreduce.Reducer.Context;
 public class Reducer4 extends Reducer<Text, Text, Text, DoubleWritable> {
 	public void reduce(Text key, Iterable<Text> value, Context context) {
 		Iterator<Text> iter = value.iterator();
+		double threshold = 2.0;
 		double max = 0;
 		
 		while (iter.hasNext()) {
@@ -21,12 +22,12 @@ public class Reducer4 extends Reducer<Text, Text, Text, DoubleWritable> {
 			String source = str[0], target = str[1];
 			double edgeBetweenness = Double.parseDouble(str[2]);
 			
-			if (edgeBetweenness > max) {
+			if (edgeBetweenness > max && edgeBetweenness > threshold) {
 				max = edgeBetweenness;
 				Driver.edgesSelected = new HashMap<>();
 				Driver.edgesSelected.put(source, new ArrayList<String>());
 				Driver.edgesSelected.get(source).add(target);
-			} else if (edgeBetweenness == max) {
+			} else if (edgeBetweenness == max && edgeBetweenness > threshold) {
 				if (Driver.edgesSelected.containsKey(source)) {
 					Driver.edgesSelected.get(source).add(target);
 				} else {

@@ -49,7 +49,7 @@ public class Reducer1 extends Reducer<Text, Text, Text, Text> {
 		while (iter.hasNext()) {
 			Text text = iter.next();
 			String[] str = text.toString().split(" ");
-			if (!key.toString().equals(str[0])) {
+			//if (!key.toString().equals(str[0])) {
 				if (str[5].equals("[]")) {
 					try {
 						context.write(key, valueText(str, adjList));
@@ -63,7 +63,7 @@ public class Reducer1 extends Reducer<Text, Text, Text, Text> {
 						e.printStackTrace();
 					}
 				}
-			}
+			//}
 		}
 	}
 	
