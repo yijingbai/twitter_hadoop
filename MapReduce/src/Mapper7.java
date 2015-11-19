@@ -29,11 +29,9 @@ public class Mapper7 extends Mapper<Object, Text, Text, Text> {
 		StringBuilder sb = new StringBuilder();
 		
 		sb.append(targetId);
-		if (adj.length > 1) {
-			for (String user: adj) {
-				sb.append(',');
-				sb.append(user);
-			}
+		for (String user: adj) {
+			sb.append(',');
+			sb.append(user);
 		}
 		
 		return new Text(sb.toString());

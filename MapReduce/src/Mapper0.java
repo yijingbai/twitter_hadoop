@@ -10,7 +10,7 @@ import org.apache.hadoop.mapreduce.Mapper.Context;
 
 public class Mapper0 extends Mapper<Object, Text, Text, Text> {
 	public void map(Object key, Text value, Context context) {
-		String[] str = value.toString().split(",");
+		String[] str = value.toString().split(" |,");
 		String targetId = str[0];
 		String followingId = str[1];
 		

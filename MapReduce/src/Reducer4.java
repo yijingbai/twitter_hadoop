@@ -17,23 +17,26 @@ public class Reducer4 extends Reducer<Text, Text, Text, DoubleWritable> {
 		double threshold = 2.0;
 		double max = 0;
 		
+		Driver.edgesSelected.clear();
 		while (iter.hasNext()) {
 			String str[] = iter.next().toString().split(" |\\t|,");
 			String source = str[0], target = str[1];
 			double edgeBetweenness = Double.parseDouble(str[2]);
 			
-			if (edgeBetweenness > max && edgeBetweenness > threshold) {
-				max = edgeBetweenness;
-				Driver.edgesSelected = new HashMap<>();
-				Driver.edgesSelected.put(source, new ArrayList<String>());
-				Driver.edgesSelected.get(source).add(target);
-			} else if (edgeBetweenness == max && edgeBetweenness > threshold) {
-				if (Driver.edgesSelected.containsKey(source)) {
+			if (edgeBetweenness > threshold) {
+				if (edgeBetweenness > max) {
+					max = edgeBetweenness;
+					Driver.edgesSelected.clear();;
+					Driver.edgesSelected.put(source, new ArrayList<String>());
 					Driver.edgesSelected.get(source).add(target);
-				} else {
-					if (Driver.edgesSelected.size() < Driver.mapSize) {
-						Driver.edgesSelected.put(source, new ArrayList<String>());
+				} else if (edgeBetweenness == max) {
+					if (Driver.edgesSelected.containsKey(source)) {
 						Driver.edgesSelected.get(source).add(target);
+					} else {
+						if (Driver.edgesSelected.size() < Driver.mapSize) {
+							Driver.edgesSelected.put(source, new ArrayList<String>());
+							Driver.edgesSelected.get(source).add(target);
+						}
 					}
 				}
 			}

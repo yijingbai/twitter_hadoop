@@ -14,7 +14,7 @@ public class Reducer2 extends Reducer<Text, Text, Text, Text> {
 	public void reduce(Text key, Iterable<Text> value, Context context) {
 		MarkableIterator<Text> iter = new MarkableIterator<Text>(value.iterator());	
 		long minDistance = Long.MAX_VALUE;
-		long count = 0;
+		long count = 1;
 		
 		try {
 			iter.mark();
@@ -27,7 +27,7 @@ public class Reducer2 extends Reducer<Text, Text, Text, Text> {
 			long distance = Long.parseLong(text.toString().split(" ")[0]);
 			if (distance < minDistance) {
 				minDistance = distance;
-				count = 0;
+				count = 1;
 			} else if (distance == minDistance) {
 				count++;
 			}
@@ -46,7 +46,7 @@ public class Reducer2 extends Reducer<Text, Text, Text, Text> {
 			long distance = Long.parseLong(str[0]);
 			long weight = Long.parseLong(str[1]);
 			if (distance == minDistance) {
-				weight += count;
+				weight = count;
 				try {
 					context.write(new Text(keyStr[0]), valueText(keyStr[1], str, distance, weight));
 				} catch (Exception e) {

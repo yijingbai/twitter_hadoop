@@ -19,7 +19,7 @@ public class Driver {
 	public static boolean allPathFound;
 	public static boolean allCommunityFound;
 	public static long communityNum;
-	public static int mapSize = 1024;  // fixed size for hash map
+	public static int mapSize = 2048;  // fixed size for hash map
 	public static HashMap<String, List<String>> edgesSelected = new HashMap<>();	
 	public static HashMap<String, String> communityBelonged;  //<user, community#>
 	
@@ -28,12 +28,12 @@ public class Driver {
 		Path outputPath0 = new Path(args[1] + "/output0");
 		job0(inputPath, outputPath0);
 		
+		Path outputPath1 = new Path(args[1] + "/output1");
+		Path outputPath2 = new Path(args[1] + "/output2");
 		while (true) {
-			Path outputPath1 = new Path(args[1] + "/output1");
-			Path outputPath2 = new Path(args[1] + "/output2");
-			allPathFound = false;
-			while (!allPathFound) {
-				allPathFound = true;
+			Driver.allPathFound = false;
+			while (!Driver.allPathFound) {
+				Driver.allPathFound = true;
 				job1(outputPath0, outputPath1);
 				job2(outputPath1, outputPath2);
 				outputPath0 = outputPath2;
@@ -45,7 +45,8 @@ public class Driver {
 			Path outputPath4 = new Path(args[1] + "/output4");
 			job4(outputPath3, outputPath4);
 			
-			if (edgesSelected.isEmpty())
+			System.out.println(Driver.edgesSelected);
+			if (Driver.edgesSelected.isEmpty())
 				break;
 			
 			Path outputPath5 = new Path(args[1] + "/output5");
@@ -55,19 +56,19 @@ public class Driver {
 		
 		// job6 is to generate output for visualization (after detecting community)
 		Path outputPath6 = new Path(args[1] + "/output6");
-		job6(outputPath0, outputPath6);
+		job6(outputPath2, outputPath6);
 		
 		// start to group users into community
 		Path outputPath7 = new Path(args[1] + "/output7");
-		communityNum = 0;
-		job7(outputPath0, outputPath7);
+		Driver.communityNum = 0;
+		job7(outputPath2, outputPath7);
 		
 		Path outputPath8 = new Path(args[1] + "/output8");
 		Path outputPath9 = new Path(args[1] + "/output9");
-		allCommunityFound = false;
-		while (!allCommunityFound) {
-			allCommunityFound = true;
-			communityBelonged = new HashMap<String, String>();
+		Driver.allCommunityFound = false;
+		while (!Driver.allCommunityFound) {
+			Driver.allCommunityFound = true;
+			Driver.communityBelonged = new HashMap<String, String>();
 			job8(outputPath7, outputPath8);
 			job9(outputPath7, outputPath9);
 			Path temp = outputPath7;
@@ -76,7 +77,7 @@ public class Driver {
 		}
 		
 		Path outputPath10 = new Path(args[1] + "/output10");
-		communityNum = 0;
+		Driver.communityNum = 0;
 		job10(outputPath7, outputPath10);
 	}
 	
