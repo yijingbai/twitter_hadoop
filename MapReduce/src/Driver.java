@@ -1,5 +1,6 @@
 import java.io.IOException;
 import java.net.URI;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
@@ -15,38 +16,44 @@ import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 
 
-public class Driver {
-	public static boolean allPathFound;
-	public static boolean allCommunityFound;
-	public static long communityNum;
-	public static int mapSize = 2048;  // fixed size for hash map
-	public static HashMap<String, List<String>> edgesSelected = new HashMap<>();	
-	public static HashMap<String, String> communityBelonged;  //<user, community#>
-	
+public class Driver {	
 	public static void main(String[] args) throws Exception {
+		boolean allPathFound;
+		boolean allCommunityFound;
+		boolean isSelected;
+		
 		Path inputPath = new Path(args[0]);
 		Path outputPath0 = new Path(args[1] + "/output0");
 		job0(inputPath, outputPath0);
 		
 		Path outputPath1 = new Path(args[1] + "/output1");
 		Path outputPath2 = new Path(args[1] + "/output2");
+		int outer = 1;
 		while (true) {
-			Driver.allPathFound = false;
-			while (!Driver.allPathFound) {
-				Driver.allPathFound = true;
-				job1(outputPath0, outputPath1);
+			allPathFound = false;
+			int inner = 1;
+			while (!allPathFound) {
+			//for (int i = 0; i < 5; i++) {
+				allPathFound = job1(outputPath0, outputPath1);
 				job2(outputPath1, outputPath2);
 				outputPath0 = outputPath2;
+				
+				System.out.println("finding shortest path: iteration #" + String.valueOf(inner));
+				System.out.println(allPathFound);
+				inner++;
 			}
 			
 			Path outputPath3 = new Path(args[1] + "/output3");
 			job3(outputPath2, outputPath3);
 			
 			Path outputPath4 = new Path(args[1] + "/output4");
-			job4(outputPath3, outputPath4);
+			isSelected = job4(outputPath3, outputPath4);
 			
-			System.out.println(Driver.edgesSelected);
-			if (Driver.edgesSelected.isEmpty())
+			System.out.println("removing edges: iteration #" + String.valueOf(outer));
+			System.out.println(isSelected);
+			outer++;
+			
+			if (!isSelected)
 				break;
 			
 			Path outputPath5 = new Path(args[1] + "/output5");
@@ -58,27 +65,23 @@ public class Driver {
 		Path outputPath6 = new Path(args[1] + "/output6");
 		job6(outputPath2, outputPath6);
 		
-		// start to group users into community
-		Path outputPath7 = new Path(args[1] + "/output7");
-		Driver.communityNum = 0;
-		job7(outputPath2, outputPath7);
-		
-		Path outputPath8 = new Path(args[1] + "/output8");
-		Path outputPath9 = new Path(args[1] + "/output9");
-		Driver.allCommunityFound = false;
-		while (!Driver.allCommunityFound) {
-			Driver.allCommunityFound = true;
-			Driver.communityBelonged = new HashMap<String, String>();
-			job8(outputPath7, outputPath8);
-			job9(outputPath7, outputPath9);
-			Path temp = outputPath7;
-			outputPath7 = outputPath9;
-			outputPath9 = temp;
-		}
-		
-		Path outputPath10 = new Path(args[1] + "/output10");
-		Driver.communityNum = 0;
-		job10(outputPath7, outputPath10);
+//		// start to group users into community
+//		Path outputPath7 = new Path(args[1] + "/output7");
+//		job7(outputPath2, outputPath7);
+//		
+//		Path outputPath8 = new Path(args[1] + "/output8");
+//		Path outputPath9 = new Path(args[1] + "/output9");
+//		allCommunityFound = false;
+//		while (!allCommunityFound) {
+//			allCommunityFound = job8(outputPath7, outputPath8);
+//			job9(outputPath7, outputPath9);
+//			Path temp = outputPath7;
+//			outputPath7 = outputPath9;
+//			outputPath9 = temp;
+//		}
+//		
+//		Path outputPath10 = new Path(args[1] + "/output10");
+//		job10(outputPath7, outputPath10);
 	}
 	
 	private static void job0(Path inputPath, Path outputPath) throws Exception {
@@ -100,7 +103,7 @@ public class Driver {
 		System.out.println(job.waitForCompletion(true) ? "Success" : "Fail");
 	}
 	
-	private static void job1(Path inputPath, Path outputPath) throws Exception {
+	private static boolean job1(Path inputPath, Path outputPath) throws Exception {
 		Configuration conf = new Configuration();
 		Job job = Job.getInstance(conf, "building path");
 		job.setJarByClass(Driver.class);
@@ -117,6 +120,10 @@ public class Driver {
 		FileOutputFormat.setOutputPath(job, outputPath);
 		
 		System.out.println(job.waitForCompletion(true) ? "Success" : "Fail");
+		Path p = new Path("./notAllPathFound");
+		boolean allPathFound = !fs.exists(p);
+		fs.delete(p);
+		return allPathFound;
 	}
 	
 	private static void job2(Path inputPath, Path outputPath) throws Exception {
@@ -157,7 +164,7 @@ public class Driver {
 		System.out.println(job.waitForCompletion(true) ? "Success" : "Fail");
 	}
 	
-	private static void job4(Path inputPath, Path outputPath) throws Exception {
+	private static boolean job4(Path inputPath, Path outputPath) throws Exception {
 		Configuration conf = new Configuration();
 		Job job = Job.getInstance(conf, "selecting edges to be removed");
 		job.setJarByClass(Driver.class);
@@ -174,6 +181,9 @@ public class Driver {
 		FileOutputFormat.setOutputPath(job, outputPath);
 		
 		System.out.println(job.waitForCompletion(true) ? "Success" : "Fail");
+		Path p = new Path("./selectedEdges");
+		boolean isSelected = fs.exists(p);
+		return isSelected;
 	}
 	
 	private static void job5(Path inputPath, Path outputPath) throws Exception {
@@ -193,6 +203,8 @@ public class Driver {
 		FileOutputFormat.setOutputPath(job, outputPath);
 		
 		System.out.println(job.waitForCompletion(true) ? "Success" : "Fail");
+		Path p = new Path("./selectedEdges");
+		fs.delete(p);
 	}
 	
 	private static void job6(Path inputPath, Path outputPath) throws Exception {
@@ -200,11 +212,11 @@ public class Driver {
 		Job job = Job.getInstance(conf, "generating output for visualization");
 		job.setJarByClass(Driver.class);
 		job.setMapperClass(Mapper6.class);
-		//job.setReducerClass(Reducer6.class);
+		job.setReducerClass(Reducer6.class);
 		job.setMapOutputKeyClass(Text.class);
 		job.setMapOutputValueClass(Text.class);
-		//job.setOutputKeyClass(Text.class);
-		//job.setOutputValueClass(Text.class);
+		job.setOutputKeyClass(Text.class);
+		job.setOutputValueClass(Text.class);
 		
 		FileSystem fs = FileSystem.get(new URI(outputPath.toString()), conf);
 		fs.delete(outputPath);
@@ -217,6 +229,7 @@ public class Driver {
 	private static void job7(Path inputPath, Path outputPath) throws Exception {
 		Configuration conf = new Configuration();
 		Job job = Job.getInstance(conf, "adding communityNum");
+		conf.setLong("communityNum", 0);
 		job.setJarByClass(Driver.class);
 		job.setMapperClass(Mapper7.class);
 		job.setReducerClass(Reducer7.class);
@@ -233,7 +246,7 @@ public class Driver {
 		System.out.println(job.waitForCompletion(true) ? "Success" : "Fail");
 	}
 	
-	private static void job8(Path inputPath, Path outputPath) throws Exception {
+	private static boolean job8(Path inputPath, Path outputPath) throws Exception {
 		Configuration conf = new Configuration();
 		Job job = Job.getInstance(conf, "selecting the smallest communityNum");
 		job.setJarByClass(Driver.class);
@@ -250,6 +263,9 @@ public class Driver {
 		FileOutputFormat.setOutputPath(job, outputPath);
 		
 		System.out.println(job.waitForCompletion(true) ? "Success" : "Fail");
+		Path p = new Path("./communityNum");
+		boolean allCommunityFound = !fs.exists(p);
+		return allCommunityFound;
 	}
 	
 	private static void job9(Path inputPath, Path outputPath) throws Exception {
@@ -269,11 +285,14 @@ public class Driver {
 		FileOutputFormat.setOutputPath(job, outputPath);
 		
 		System.out.println(job.waitForCompletion(true) ? "Success" : "Fail");
+		Path p = new Path("./communityNum");
+		fs.delete(p);
 	}
 	
 	private static void job10(Path inputPath, Path outputPath) throws Exception {
 		Configuration conf = new Configuration();
 		Job job = Job.getInstance(conf, "adding communityNum");
+		conf.setLong("communityNum", 0);
 		job.setJarByClass(Driver.class);
 		job.setMapperClass(Mapper10.class);
 		//job.setReducerClass(Reducer10.class);

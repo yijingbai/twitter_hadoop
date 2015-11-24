@@ -8,11 +8,12 @@ import org.apache.hadoop.mapreduce.Reducer.Context;
 
 public class Reducer7 extends Reducer<Text, Text, LongWritable, Text> {
 	public void reduce(Text key, Iterable<Text> value, Context context) {
-		Driver.communityNum++;
+		long communityNum = context.getConfiguration().getLong("communityNum", 0) + 1;
 		try {
-			context.write(new LongWritable(Driver.communityNum), key);
+			context.write(new LongWritable(communityNum), key);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
+		context.getConfiguration().setLong("communityNum", communityNum);
 	}
 }

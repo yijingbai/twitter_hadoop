@@ -4,6 +4,8 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.StringTokenizer;
 
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.Text;
@@ -53,18 +55,26 @@ public class Mapper1 extends Mapper<Object, Text, Text, Text> {
 			}
 			
 			// extend to adjacent vertices
-			for (String id: adjList) {
-				status = "active";
-				targetId = id;
-				adjList = new ArrayList<String>();
+			if (pathList.size() < 4) {
+				for (String id: adjList) {
+					status = "active";
+					targetId = id;
+					adjList = new ArrayList<String>();
+					try {
+						context.write(new Text(targetId), valueText(sourceId, distance, weight, status, pathList, adjList));
+					} catch (Exception e) {
+						e.printStackTrace();
+					}
+				}
+				
 				try {
-					context.write(new Text(targetId), valueText(sourceId, distance, weight, status, pathList, adjList));
-				} catch (Exception e) {
-					e.printStackTrace();
+					FileSystem fs = FileSystem.get(context.getConfiguration());
+					fs.createNewFile(new Path("./notAllPathFound"));
+				} catch (IOException e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
 				}
 			}
-			
-			Driver.allPathFound = false;
 		}
 	}
 	

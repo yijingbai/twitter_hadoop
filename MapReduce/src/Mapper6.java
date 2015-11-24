@@ -15,11 +15,13 @@ public class Mapper6 extends Mapper<Object, Text, Text, Text> {
 		String targetId = str[0];
 		String[] adj = str[6].substring(1, str[6].length() - 1).split(",");
 		
-		for (String user: adj) {
-			try {
-				context.write(new Text(targetId + "," + user), new Text());
-			} catch (Exception e) {
-				e.printStackTrace();
+		if (!str[6].equals("[]")) {
+			for (String user: adj) {
+				try {
+					context.write(new Text(targetId + "," + user), new Text());
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
 			}
 		}
 	}

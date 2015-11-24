@@ -1,8 +1,17 @@
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.StringTokenizer;
 
+import org.apache.hadoop.fs.FSDataInputStream;
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Mapper;
 import org.apache.hadoop.mapreduce.Mapper.Context;
@@ -12,10 +21,10 @@ public class Mapper5 extends Mapper<Object, Text, Text, Text> {
 	public void map(Object key, Text value, Context context) {
 		String[] str = value.toString().split(" |\\t");
 		
-		String targetId = str[0];
-		String sourceId = str[1];
+		String targetId = str[0], sourceId = str[1];
 		List<String> pathList = new ArrayList<String>();
 		List<String> adjList = new ArrayList<String>();
+		HashMap<String, Set<String>> map = new HashMap<>();
 		
 		StringTokenizer st;
 		st = new StringTokenizer(str[5].substring(1, str[5].length() - 1), ",");
@@ -27,11 +36,28 @@ public class Mapper5 extends Mapper<Object, Text, Text, Text> {
 			adjList.add(st.nextToken());
 		}
 		
-		if (Driver.edgesSelected.containsKey(targetId)) {
-			List<String> removeList = Driver.edgesSelected.get(targetId);
-			for (String s: removeList) {
-				adjList.remove(s);
+		try {
+			Path p = new Path("./selectedEdges");
+			FileSystem fs = FileSystem.get(context.getConfiguration());
+			FSDataInputStream in = fs.open(p);
+			String line;
+			
+			BufferedReader bfr = new BufferedReader(new InputStreamReader(in));
+			while ((line = bfr.readLine()) != null) {
+				String[] s = line.split(",");
+				if (!map.containsKey(s[0]))
+					map.put(s[0], new HashSet<String>());
+				map.get(s[0]).add(s[1]);
 			}
+			in.close();
+		} catch (IOException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		}
+		
+		if (map.containsKey(targetId)) {
+			for (String user: map.get(targetId))
+				adjList.remove(user);
 		}
 		
 		boolean remove = false;
@@ -39,7 +65,7 @@ public class Mapper5 extends Mapper<Object, Text, Text, Text> {
 			String s = pathList.get(i);
 			String t = pathList.get(i + 1);
 			
-			if (Driver.edgesSelected.containsKey(s) && Driver.edgesSelected.get(s).contains(t)) {
+			if (map.containsKey(s) && map.get(s).contains(t)) {
 				try {
 					context.write(new Text(sourceId), valueText(sourceId));
 				} catch (Exception e) {

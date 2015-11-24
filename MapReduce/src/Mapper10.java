@@ -10,11 +10,12 @@ public class Mapper10 extends Mapper<Object, Text, LongWritable, Text> {
 	public void map(Object key, Text value, Context context) {
 		String[] str = value.toString().split(" |\\t");
 		
-		Driver.communityNum++;
+		long communityNum = context.getConfiguration().getLong("communityNum", 0) + 1;
 		try {
-			context.write(new LongWritable(Driver.communityNum), new Text(str[1]));
+			context.write(new LongWritable(communityNum), new Text(str[1]));
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
+		context.getConfiguration().setLong("communityNum", communityNum);
 	}
 }
