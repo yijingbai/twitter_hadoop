@@ -1,4 +1,6 @@
+import java.io.BufferedWriter;
 import java.io.IOException;
+import java.io.OutputStreamWriter;
 import java.util.Iterator;
 
 import org.apache.hadoop.fs.FSDataOutputStream;
@@ -38,8 +40,9 @@ public class Reducer8 extends Reducer<Text, Text, Text, Text> {
 				if (!fs.exists(p))
 					fs.createNewFile(p);
 				FSDataOutputStream out = fs.append(p);
-				out.writeChars(key.toString() + "," + minCommunityNum + "\n");
-				out.close();
+				BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(out, "UTF-8"));
+				bw.write(key.toString() + "," + minCommunityNum + "\n");
+				bw.close();
 			} catch (Exception e1) {
 				e1.printStackTrace();
 			}

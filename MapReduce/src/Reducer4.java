@@ -1,4 +1,6 @@
+import java.io.BufferedWriter;
 import java.io.IOException;
+import java.io.OutputStreamWriter;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -75,8 +77,9 @@ public class Reducer4 extends Reducer<Text, Text, Text, DoubleWritable> {
 				if (!fs.exists(p))
 					fs.createNewFile(p);
 				FSDataOutputStream out = fs.append(p);
-				out.writeChars(s + "," + t + "\n");
-				out.close();
+				BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(out, "UTF-8"));
+				bw.write(s + "," + t + "\n");
+				bw.close();
 			} catch (Exception e1) {
 				e1.printStackTrace();
 			}

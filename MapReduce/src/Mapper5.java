@@ -40,23 +40,21 @@ public class Mapper5 extends Mapper<Object, Text, Text, Text> {
 			Path p = new Path("./selectedEdges");
 			FileSystem fs = FileSystem.get(context.getConfiguration());
 			FSDataInputStream in = fs.open(p);
+			BufferedReader br = new BufferedReader(new InputStreamReader(in, "UTF-8"));
 			String line;
 			
-			BufferedReader bfr = new BufferedReader(new InputStreamReader(in));
-			while ((line = bfr.readLine()) != null) {
+			while ((line = br.readLine()) != null) {
 				String[] s = line.split(",");
 				if (!map.containsKey(s[0]))
 					map.put(s[0], new HashSet<String>());
 				map.get(s[0]).add(s[1]);
 			}
-			in.close();
+			br.close();
 		} catch (IOException e1) {
 			// TODO Auto-generated catch block
 			e1.printStackTrace();
 		}
-		
-		System.out.println(map);
-		
+				
 		System.out.println("before: " + targetId);
 		if (map.containsKey(targetId)) {
 			System.out.println("contains: " + targetId);
@@ -71,7 +69,7 @@ public class Mapper5 extends Mapper<Object, Text, Text, Text> {
 			String s = pathList.get(i);
 			String t = pathList.get(i + 1);
 			
-			System.out.println(s + ","+ t);
+			System.out.println("before: " + s + ","+ t);
 			if (map.containsKey(s) && map.get(s).contains(t)) {
 				System.out.println("found: " + s + "," + t);
 				try {

@@ -24,47 +24,46 @@ public class Driver {
 		
 		Path inputPath = new Path(args[0]);
 		Path outputPath0 = new Path(args[1] + "/output0");
-//		job0(inputPath, outputPath0);
+		job0(inputPath, outputPath0);
 		
 		Path outputPath1 = new Path(args[1] + "/output1");
 		Path outputPath2 = new Path(args[1] + "/output2");
 		int outer = 1;
 		while (true) {
-//			allPathFound = false;
-//			int inner = 1;
-//			while (!allPathFound) {
-//			//for (int i = 0; i < 5; i++) {
-//				allPathFound = job1(outputPath0, outputPath1);
-//				job2(outputPath1, outputPath2);
-//				outputPath0 = outputPath2;
-//				
-//				System.out.println("finding shortest path: iteration #" + String.valueOf(inner));
-//				System.out.println(allPathFound);
-//				inner++;
-//			}
-//			
-//			Path outputPath3 = new Path(args[1] + "/output3");
-//			job3(outputPath2, outputPath3);
-//			
-//			Path outputPath4 = new Path(args[1] + "/output4");
-//			isSelected = job4(outputPath3, outputPath4);
-//			
-//			System.out.println("removing edges: iteration #" + String.valueOf(outer));
-//			System.out.println(isSelected);
-//			outer++;
-//			
-//			if (!isSelected)
-//				break;
+			allPathFound = false;
+			int inner = 1;
+			while (!allPathFound) {
+			//for (int i = 0; i < 5; i++) {
+				allPathFound = job1(outputPath0, outputPath1);
+				job2(outputPath1, outputPath2);
+				outputPath0 = outputPath2;
+				
+				System.out.println("finding shortest path: iteration #" + String.valueOf(inner));
+				System.out.println(allPathFound);
+				inner++;
+			}
+			
+			Path outputPath3 = new Path(args[1] + "/output3");
+			job3(outputPath2, outputPath3);
+			
+			Path outputPath4 = new Path(args[1] + "/output4");
+			isSelected = job4(outputPath3, outputPath4);
+			
+			System.out.println("removing edges: iteration #" + String.valueOf(outer));
+			System.out.println(isSelected);
+			outer++;
+			
+			if (!isSelected)
+				break;
 			
 			Path outputPath5 = new Path(args[1] + "/output5");
 			job5(outputPath2, outputPath5);
 			outputPath0 = outputPath5;
-			System.exit(0);
 		}
 		
 		// job6 is to generate output for visualization (after detecting community)
-//		Path outputPath6 = new Path(args[1] + "/output6");
-//		job6(outputPath2, outputPath6);
+		Path outputPath6 = new Path(args[1] + "/output6");
+		job6(outputPath2, outputPath6);
 		
 //		// start to group users into community
 //		Path outputPath7 = new Path(args[1] + "/output7");
@@ -205,7 +204,7 @@ public class Driver {
 		
 		System.out.println(job.waitForCompletion(true) ? "Success" : "Fail");
 		Path p = new Path("./selectedEdges");
-		//fs.delete(p);
+		fs.delete(p);
 	}
 	
 	private static void job6(Path inputPath, Path outputPath) throws Exception {

@@ -1,4 +1,6 @@
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.util.HashMap;
 import java.util.HashSet;
 
@@ -28,12 +30,13 @@ public class Mapper9 extends Mapper<Object, Text, Text, Text> {
 			Path p = new Path("./communityNum");
 			FileSystem fs = FileSystem.get(context.getConfiguration());
 			FSDataInputStream in = fs.open(p);
+			BufferedReader br = new BufferedReader(new InputStreamReader(in, "UTF-8"));
 			String line;
-			while ((line = in.readLine()) != null) {
+			while ((line = br.readLine()) != null) {
 				String[] s = line.split(",");
 				map.put(s[0], s[1]);
 			}
-			in.close();
+			br.close();
 		} catch (IOException e1) {
 			// TODO Auto-generated catch block
 			e1.printStackTrace();
