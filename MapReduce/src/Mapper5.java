@@ -55,9 +55,15 @@ public class Mapper5 extends Mapper<Object, Text, Text, Text> {
 			e1.printStackTrace();
 		}
 		
+		System.out.println(map);
+		
+		System.out.println("before: " + targetId);
 		if (map.containsKey(targetId)) {
+			System.out.println("contains: " + targetId);
+			System.out.println(adjList.toString());
 			for (String user: map.get(targetId))
 				adjList.remove(user);
+			System.out.println(adjList.toString());
 		}
 		
 		boolean remove = false;
@@ -65,7 +71,9 @@ public class Mapper5 extends Mapper<Object, Text, Text, Text> {
 			String s = pathList.get(i);
 			String t = pathList.get(i + 1);
 			
+			System.out.println(s + ","+ t);
 			if (map.containsKey(s) && map.get(s).contains(t)) {
+				System.out.println("found: " + s + "," + t);
 				try {
 					context.write(new Text(sourceId), valueText(sourceId));
 				} catch (Exception e) {
