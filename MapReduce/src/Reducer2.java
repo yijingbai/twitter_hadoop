@@ -1,4 +1,5 @@
 import java.io.IOException;
+import java.util.HashSet;
 import java.util.Iterator;
 
 import org.apache.hadoop.io.LongWritable;
@@ -12,46 +13,77 @@ import org.apache.hadoop.mapreduce.Reducer.Context;
 
 public class Reducer2 extends Reducer<Text, Text, Text, Text> {
 	public void reduce(Text key, Iterable<Text> value, Context context) {
-		MarkableIterator<Text> iter = new MarkableIterator<Text>(value.iterator());	
-		long minDistance = Long.MAX_VALUE;
-		long count = 1;
+		// iterate twice
+//		MarkableIterator<Text> iter = new MarkableIterator<Text>(value.iterator());	
+//		long minDistance = Long.MAX_VALUE;
+//		long count = 1;
+//		
+//		try {
+//			iter.mark();
+//		} catch (IOException e) {
+//			// TODO Auto-generated catch block
+//			e.printStackTrace();
+//		}
+//		while (iter.hasNext()) {
+//			Text text = iter.next();
+//			long distance = Long.parseLong(text.toString().split(" ")[0]);
+//			if (distance < minDistance) {
+//				minDistance = distance;
+//				count = 1;
+//			} else if (distance == minDistance) {
+//				count++;
+//			}
+//		}
+//		
+//		try {
+//			iter.reset();
+//		} catch (IOException e) {
+//			// TODO Auto-generated catch block
+//			e.printStackTrace();
+//		}
+//		String[] keyStr = key.toString().split(",");
+//		while (iter.hasNext()) {
+//			Text text = iter.next();
+//			String[] str = text.toString().split(" ");
+//			long distance = Long.parseLong(str[0]);
+//			long weight = Long.parseLong(str[1]);
+//			if (distance == minDistance) {
+//				weight = count;
+//				try {
+//					context.write(new Text(keyStr[0]), valueText(keyStr[1], str, distance, weight));
+//				} catch (Exception e) {
+//					e.printStackTrace();
+//				}
+//			}
+//		}
 		
-		try {
-			iter.mark();
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+		
+		// using set
+		Iterator<Text> iter = value.iterator();
+		
+		HashSet<String> set = new HashSet<String>();
+		long minDistance = Long.MAX_VALUE;
+		
 		while (iter.hasNext()) {
-			Text text = iter.next();
-			long distance = Long.parseLong(text.toString().split(" ")[0]);
+			String s = iter.next().toString();
+			long distance = Long.parseLong(s.split(" ")[0]);
 			if (distance < minDistance) {
+				set.clear();
+				set.add(s);
 				minDistance = distance;
-				count = 1;
 			} else if (distance == minDistance) {
-				count++;
+				set.add(s);
 			}
 		}
 		
-		try {
-			iter.reset();
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+		long weight = set.size();
 		String[] keyStr = key.toString().split(",");
-		while (iter.hasNext()) {
-			Text text = iter.next();
-			String[] str = text.toString().split(" ");
-			long distance = Long.parseLong(str[0]);
-			long weight = Long.parseLong(str[1]);
-			if (distance == minDistance) {
-				weight = count;
-				try {
-					context.write(new Text(keyStr[0]), valueText(keyStr[1], str, distance, weight));
-				} catch (Exception e) {
-					e.printStackTrace();
-				}
+		for (String s: set) {
+			String[] str = s.split(" ");
+			try {
+				context.write(new Text(keyStr[0]), valueText(keyStr[1], str, minDistance, weight));
+			} catch (Exception e) {
+				e.printStackTrace();
 			}
 		}
 	}

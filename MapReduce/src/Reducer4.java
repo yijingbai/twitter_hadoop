@@ -22,10 +22,11 @@ import org.apache.hadoop.mapreduce.Reducer.Context;
 public class Reducer4 extends Reducer<Text, Text, Text, DoubleWritable> {
 	public void reduce(Text key, Iterable<Text> value, Context context) {
 		Iterator<Text> iter = value.iterator();
-		double threshold = 2.0;
+		double threshold = 3.0;
 //		double max = 0;
 		
-		PriorityQueue<Pair> pq = new PriorityQueue<>(100, new PairComparator());
+		int K = 5000;
+		PriorityQueue<Pair> pq = new PriorityQueue<>(K, new PairComparator());
 //		List<String> sourceSelected = new ArrayList<String>();
 //		List<String> targetSelected = new ArrayList<String>();
 		
@@ -36,7 +37,7 @@ public class Reducer4 extends Reducer<Text, Text, Text, DoubleWritable> {
 			
 			if (edgeBetweenness > threshold) {
 				Pair pair = new Pair(source, target, edgeBetweenness);
-				if (pq.size() < 100) {
+				if (pq.size() < K) {
 					pq.add(pair);
 				} else {
 					if (edgeBetweenness > pq.peek().edgeBetweenness) {

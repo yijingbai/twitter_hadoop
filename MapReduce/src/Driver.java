@@ -65,23 +65,23 @@ public class Driver {
 		Path outputPath6 = new Path(args[1] + "/output6");
 		job6(outputPath2, outputPath6);
 		
-//		// start to group users into community
-//		Path outputPath7 = new Path(args[1] + "/output7");
-//		job7(outputPath2, outputPath7);
-//		
-//		Path outputPath8 = new Path(args[1] + "/output8");
-//		Path outputPath9 = new Path(args[1] + "/output9");
-//		allCommunityFound = false;
-//		while (!allCommunityFound) {
-//			allCommunityFound = job8(outputPath7, outputPath8);
-//			job9(outputPath7, outputPath9);
-//			Path temp = outputPath7;
-//			outputPath7 = outputPath9;
-//			outputPath9 = temp;
-//		}
-//		
-//		Path outputPath10 = new Path(args[1] + "/output10");
-//		job10(outputPath7, outputPath10);
+		// start to group users into community
+		Path outputPath7 = new Path(args[1] + "/output7");
+		job7(outputPath2, outputPath7);
+		
+		Path outputPath8 = new Path(args[1] + "/output8");
+		Path outputPath9 = new Path(args[1] + "/output9");
+		allCommunityFound = false;
+		while (!allCommunityFound) {
+			allCommunityFound = job8(outputPath7, outputPath8);
+			job9(outputPath7, outputPath9);
+			Path temp = outputPath7;
+			outputPath7 = outputPath9;
+			outputPath9 = temp;
+		}
+		
+		Path outputPath10 = new Path(args[1] + "/output10");
+		job10(outputPath7, outputPath10);
 	}
 	
 	private static void job0(Path inputPath, Path outputPath) throws Exception {
