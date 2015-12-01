@@ -1,6 +1,9 @@
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.StringTokenizer;
 
-import org.apache.hadoop.io.LongWritable;
+import org.apache.hadoop.io.DoubleWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Mapper;
 import org.apache.hadoop.mapreduce.Mapper.Context;
@@ -8,35 +11,29 @@ import org.apache.hadoop.mapreduce.Mapper.Context;
 // input text format: 
 // targetId sourceId distance weight status pathList adjList
 
-public class Mapper2 extends Mapper<Object, Text, Text, Text> {
+public class Mapper2 extends Mapper<Object, Text, Text, DoubleWritable> {
 	public void map(Object key, Text value, Context context) {
 		String[] str = value.toString().split(" |\\t");
 		
-		try {
-			context.write(keyText(str), valueText(str));
-		} catch (Exception e) {
-			e.printStackTrace();
+		String path = str[5].substring(1, str[5].length() - 1);
+		String[] users = path.split(",");
+		long weight = Long.parseLong(str[3]);
+		
+		for (int i = 0; i < users.length - 1; i++) {
+			try {
+				context.write(keyText(users[i], users[i + 1]), new DoubleWritable(1.0 / weight));
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
 		}
 	}
 	
-	public Text keyText(String[] str) {
+	public Text keyText(String source, String target) {
 		StringBuilder sb = new StringBuilder();
 		
-		sb.append(str[0]);
+		sb.append(source);
 		sb.append(',');
-		sb.append(str[1]);
-		
-		return new Text(sb.toString());
-	}
-	
-	public Text valueText(String[] str) {
-		StringBuilder sb = new StringBuilder();
-		
-		for (int i = 2; i < str.length; i++) {
-			sb.append(str[i]);
-			if (i != str.length - 1)
-				sb.append(' ');
-		}
+		sb.append(target);
 		
 		return new Text(sb.toString());
 	}

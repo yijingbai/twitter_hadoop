@@ -17,114 +17,47 @@ import org.apache.hadoop.mapreduce.Reducer;
 
 public class Reducer1 extends Reducer<Text, Text, Text, Text> {
 	public void reduce(Text key, Iterable<Text> value, Context context) {
-		// iterate twice
-//		MarkableIterator<Text> iter = new MarkableIterator<Text>(value.iterator());	
-//		String adjListStr = "[]";
-//		
-//		try {
-//			iter.mark();
-//		} catch (IOException e1) {
-//			// TODO Auto-generated catch block
-//			e1.printStackTrace();
-//		}
-//		while (iter.hasNext()) {
-//			String[] str = iter.next().toString().split(" ");
-//			if (!str[5].equals("[]")) {
-//				adjListStr = str[5];
-//				break;
-//			}
-//		}
-//		
-//		try {
-//			iter.reset();
-//		} catch (IOException e1) {
-//			// TODO Auto-generated catch block
-//			e1.printStackTrace();
-//		}
-//		while (iter.hasNext()) {
-//			Text text = iter.next();
-//			String[] str = text.toString().split(" ");
-//			//if (!key.toString().equals(str[0])) {
-//				if (str[5].equals("[]")) {
-//					try {
-//						context.write(key, valueText(str, adjListStr));
-//					} catch (Exception e) {
-//						e.printStackTrace();
-//					}
-//				} else {
-//					try {
-//						context.write(key, text);
-//					} catch (Exception e) {
-//						e.printStackTrace();
-//					}
-//				}
-//			//}
-//		}
-		
-		
-		// using cache
 		Iterator<Text> iter = value.iterator();
 		
-		HashSet<String> cache = new HashSet<String>();
-		String adjListStr = "[]";
+		HashSet<String> set = new HashSet<String>();
+		long minDistance = Long.MAX_VALUE;
 		
 		while (iter.hasNext()) {
 			String s = iter.next().toString();
-			String[] str = s.split(" ");
-			cache.add(s);
-			if (!str[5].equals("[]")) {
-				adjListStr = str[5];
-				break;
+			long distance = Long.parseLong(s.split(" ")[0]);
+			if (distance < minDistance) {
+				set.clear();
+				set.add(s);
+				minDistance = distance;
+			} else if (distance == minDistance) {
+				set.add(s);
 			}
 		}
 		
-		while (iter.hasNext()) {
-			String s = iter.next().toString();
+		long weight = set.size();
+		String[] keyStr = key.toString().split(",");
+		for (String s: set) {
 			String[] str = s.split(" ");
-			if (!cache.contains(s)) {
-				if (str[5].equals("[]")) {
-					try {
-						context.write(key, valueText(str, adjListStr));
-					} catch (Exception e) {
-						e.printStackTrace();
-					}
-				} else {
-					try {
-						context.write(key, new Text(s));
-					} catch (Exception e) {
-						e.printStackTrace();
-					}
-				}
-			}
-		}
-		
-		for (String s: cache) {
-			String[] str = s.split(" ");
-			if (str[5].equals("[]")) {
-				try {
-					context.write(key, valueText(str, adjListStr));
-				} catch (Exception e) {
-					e.printStackTrace();
-				}
-			} else {
-				try {
-					context.write(key, new Text(s));
-				} catch (Exception e) {
-					e.printStackTrace();
-				}
+			try {
+				context.write(new Text(keyStr[0]), valueText(keyStr[1], str, minDistance, weight));
+			} catch (Exception e) {
+				e.printStackTrace();
 			}
 		}
 	}
 	
-	public Text valueText(String[] str, String adjListStr) {
+	public Text valueText(String sourceId, String[] str, long distance, long weight) {
 		StringBuilder sb = new StringBuilder();
 		
-		for (int i = 0; i < str.length - 1; i++) {
-			sb.append(str[i]);
-			sb.append(' ');
-		}
-		
-		sb.append(adjListStr);
+		sb.append(sourceId);
+		sb.append(' ');
+		sb.append(distance);
+		sb.append(' ');
+		sb.append(weight);
+		sb.append(' ');
+		sb.append(str[2]);
+		sb.append(' ');
+		sb.append(str[3]);
 		
 		return new Text(sb.toString());
 	}

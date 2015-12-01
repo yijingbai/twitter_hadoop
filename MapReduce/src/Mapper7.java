@@ -5,32 +5,23 @@ import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Mapper;
 import org.apache.hadoop.mapreduce.Mapper.Context;
 
-// input text format: 
-// targetId sourceId distance weight status pathList adjList
+// input format:
+// community# user1,user2,user3...
 
 // output format:
-// community# target,adj1,adj2...
+// user community#
 
-public class Mapper7 extends Mapper<Object, Text, Text, Text> {	
+public class Mapper7 extends Mapper<Object, Text, Text, Text> {
 	public void map(Object key, Text value, Context context) {
 		String[] str = value.toString().split(" |\\t");
+		String[] users = str[1].split(",");
 		
-		try {
-			context.write(keyText(str), new Text());
-		} catch (Exception e) {
-			e.printStackTrace();
+		for (String user: users) {
+			try {
+				context.write(new Text(user), new Text(str[0]));
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
 		}
-	}
-	
-	public Text keyText(String[] str) {
-		StringBuilder sb = new StringBuilder();
-		
-		sb.append(str[0]);
-		if (str.length > 1) {
-			sb.append(',');
-			sb.append(str[1]);
-		}
-		
-		return new Text(sb.toString());
 	}
 }

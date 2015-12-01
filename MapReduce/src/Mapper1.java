@@ -58,9 +58,11 @@ public class Mapper1 extends Mapper<Object, Text, Text, Text> {
 			e1.printStackTrace();
 		}
 		
+		System.out.println(adjList);
+		
 		if (status.equals("inactive")) {
 			try {
-				context.write(new Text(targetId), valueText(sourceId, distance, weight, status, pathList));
+				context.write(keyText(targetId, sourceId), valueText(distance, weight, status, pathList));
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
@@ -69,19 +71,19 @@ public class Mapper1 extends Mapper<Object, Text, Text, Text> {
 			distance++;
 			pathList.add(targetId);
 			try {
-				context.write(new Text(targetId), valueText(sourceId, distance, weight, status, pathList));
+				context.write(keyText(targetId, sourceId), valueText(distance, weight, status, pathList));
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
 			
 			// extend to adjacent vertices
-			//if (pathList.size() < 4) {
+			if (pathList.size() < 4) {
 				for (String id: adjList) {
 					status = "active";
 					targetId = id;
 					adjList = new ArrayList<String>();
 					try {
-						context.write(new Text(targetId), valueText(sourceId, distance, weight, status, pathList));
+						context.write(keyText(targetId, sourceId), valueText(distance, weight, status, pathList));
 					} catch (Exception e) {
 						e.printStackTrace();
 					}
@@ -94,15 +96,23 @@ public class Mapper1 extends Mapper<Object, Text, Text, Text> {
 					// TODO Auto-generated catch block
 					e1.printStackTrace();
 				}
-			//}
+			}
 		}
 	}
 	
-	public Text valueText(String sourceId, long distance, long weight, String status, List<String> pathList) {
+	public Text keyText(String targetId, String sourceId) {
 		StringBuilder sb = new StringBuilder();
 		
+		sb.append(targetId);
+		sb.append(',');
 		sb.append(sourceId);
-		sb.append(' ');
+		
+		return new Text(sb.toString());
+	}
+	
+	public Text valueText(long distance, long weight, String status, List<String> pathList) {
+		StringBuilder sb = new StringBuilder();
+		
 		sb.append(distance);
 		sb.append(' ');
 		sb.append(weight);

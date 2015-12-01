@@ -1,51 +1,41 @@
-import java.io.BufferedWriter;
 import java.io.IOException;
-import java.io.OutputStreamWriter;
+import java.util.HashSet;
 import java.util.Iterator;
 
-import org.apache.hadoop.fs.FSDataOutputStream;
-import org.apache.hadoop.fs.FileSystem;
-import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Reducer;
 import org.apache.hadoop.mapreduce.Reducer.Context;
 
-// key: user
-// value: community#
+// key: community#
+// value: user1,user2,user3...
 
 public class Reducer8 extends Reducer<Text, Text, Text, Text> {
 	public void reduce(Text key, Iterable<Text> value, Context context) {
 		Iterator<Text> iter = value.iterator();
-		boolean unique = true;
+		HashSet<String> set = new HashSet<String>();
 		
-		String minCommunityNum = iter.next().toString();
 		while (iter.hasNext()) {
-			String communityNum = iter.next().toString();
-			if (communityNum.compareTo(minCommunityNum) < 0) {
-				minCommunityNum = communityNum;
-				unique = false;
-			}
+			String[] users = iter.next().toString().split(",");
+			for (String user: users)
+				set.add(user);
 		}
 		
-		if (!unique) {
-			try {
-				context.write(key, new Text(minCommunityNum));
-			} catch (Exception e) {
-				e.printStackTrace();
-			}
-			
-			try {
-				Path p = new Path("./communityNum");
-				FileSystem fs = FileSystem.get(context.getConfiguration());
-				if (!fs.exists(p))
-					fs.createNewFile(p);
-				FSDataOutputStream out = fs.append(p);
-				BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(out, "UTF-8"));
-				bw.write(key.toString() + "," + minCommunityNum + "\n");
-				bw.close();
-			} catch (Exception e1) {
-				e1.printStackTrace();
-			}
+		try {
+			context.write(key, valueText(set));
+		} catch (Exception e) {
+			e.printStackTrace();
 		}
+	}
+	
+	public Text valueText(HashSet<String> set) {
+		StringBuilder sb = new StringBuilder();
+		
+		for (String user: set) {
+			sb.append(user);
+			sb.append(',');
+		}
+		sb.deleteCharAt(sb.length() - 1);
+		
+		return new Text(sb.toString());
 	}
 }

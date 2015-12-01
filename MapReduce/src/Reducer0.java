@@ -38,8 +38,6 @@ public class Reducer0 extends Reducer<Text, Text, Text, Text> {
 		try {
 			Path p = new Path("./result/adjList");
 			FileSystem fs = FileSystem.get(context.getConfiguration());
-			if (!fs.exists(p))
-				fs.createNewFile(p);
 			FSDataOutputStream out = fs.append(p);
 			BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(out, "UTF-8"));
 			bw.write(targetId + " ");
