@@ -35,6 +35,9 @@ public class Driver {
 		job0(inputPath, outputPath0);
 		
 		Path outputPath1 = new Path(args[1] + "/output1");
+		Path outputPath2 = new Path(args[1] + "/output2");
+		Path outputPath3 = new Path(args[1] + "/output3");
+		Path outputPath4 = new Path(args[1] + "/output4");
 		int outer = 1;
 		while (true) {
 			int inner = 1;
@@ -50,10 +53,8 @@ public class Driver {
 				inner++;
 			}
 			
-			Path outputPath2 = new Path(args[1] + "/output2");
 			job2(outputPath0, outputPath2);
 			
-			Path outputPath3 = new Path(args[1] + "/output3");
 			isSelected = job3(outputPath2, outputPath3);
 			
 			System.out.println("removing edges: iteration #" + String.valueOf(outer));
@@ -63,7 +64,6 @@ public class Driver {
 			if (!isSelected)
 				break;
 			
-			Path outputPath4 = new Path(args[1] + "/output4");
 			job4(outputPath0, outputPath4);
 			Path temp = outputPath0;
 			outputPath0 = outputPath4;
@@ -175,10 +175,8 @@ public class Driver {
 		FileInputFormat.addInputPath(job, inputPath);
 		FileOutputFormat.setOutputPath(job, outputPath);
 		
-		Path p = new Path("./selectedEdges");
-		fs.createNewFile(p);
-		
 		System.out.println(job.waitForCompletion(true) ? "Success" : "Fail");
+		Path p = new Path("./selectedEdges");
 		boolean isSelected = fs.exists(p);
 		return isSelected;
 	}
@@ -345,7 +343,7 @@ public class Driver {
 		job.setReducerClass(Reducer9.class);
 		job.setMapOutputKeyClass(Text.class);
 		job.setMapOutputValueClass(Text.class);
-		job.setOutputKeyClass(Text.class);
+		job.setOutputKeyClass(LongWritable.class);
 		job.setOutputValueClass(Text.class);
 		
 		FileSystem fs = FileSystem.get(new URI(outputPath.toString()), conf);

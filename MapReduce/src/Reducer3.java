@@ -75,6 +75,8 @@ public class Reducer3 extends Reducer<Text, Text, Text, DoubleWritable> {
 			try {
 				Path p = new Path("./selectedEdges");
 				FileSystem fs = FileSystem.get(context.getConfiguration());
+				if (!fs.exists(p))
+					fs.createNewFile(p);
 				FSDataOutputStream out = fs.append(p);
 				BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(out, "UTF-8"));
 				bw.write(s + "," + t + "\n");
