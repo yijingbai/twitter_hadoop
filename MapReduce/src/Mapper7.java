@@ -15,23 +15,20 @@ public class Mapper7 extends Mapper<Object, Text, Text, Text> {
 	public void map(Object key, Text value, Context context) {
 		String[] str = value.toString().split(" |\\t");
 		
-		String targetId = str[0];
-		String[] adj = str[6].substring(1, str[6].length() - 1).split(",");
-		
 		try {
-			context.write(keyText(targetId, adj), new Text());
+			context.write(keyText(str), new Text());
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
 	}
 	
-	public Text keyText(String targetId, String[] adj) {
+	public Text keyText(String[] str) {
 		StringBuilder sb = new StringBuilder();
 		
-		sb.append(targetId);
-		for (String user: adj) {
+		sb.append(str[0]);
+		if (str.length > 1) {
 			sb.append(',');
-			sb.append(user);
+			sb.append(str[1]);
 		}
 		
 		return new Text(sb.toString());

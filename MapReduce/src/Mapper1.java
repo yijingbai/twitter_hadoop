@@ -1,9 +1,14 @@
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.StringTokenizer;
 
+import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.IntWritable;
@@ -33,14 +38,29 @@ public class Mapper1 extends Mapper<Object, Text, Text, Text> {
 			pathList.add(st.nextToken());
 		}
 		
-		st = new StringTokenizer(str[6].substring(1, str[6].length() - 1), ",");
-		while (st.hasMoreTokens()) {
-			adjList.add(st.nextToken());
+		try {
+			Path p = new Path("./result/adjList");
+			FileSystem fs = FileSystem.get(context.getConfiguration());
+			FSDataInputStream in = fs.open(p);
+			BufferedReader br = new BufferedReader(new InputStreamReader(in, "UTF-8"));
+			String line;			
+			while ((line = br.readLine()) != null) {
+				String[] users = line.split(" |,");
+				if (users[0].equals(targetId)) {
+					for (int i = 1; i < users.length; i++)
+						adjList.add(users[i]);
+					break;
+				}
+			}
+			br.close();
+		} catch (IOException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
 		}
 		
 		if (status.equals("inactive")) {
 			try {
-				context.write(new Text(targetId), valueText(sourceId, distance, weight, status, pathList, adjList));
+				context.write(new Text(targetId), valueText(sourceId, distance, weight, status, pathList));
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
@@ -49,19 +69,19 @@ public class Mapper1 extends Mapper<Object, Text, Text, Text> {
 			distance++;
 			pathList.add(targetId);
 			try {
-				context.write(new Text(targetId), valueText(sourceId, distance, weight, status, pathList, adjList));
+				context.write(new Text(targetId), valueText(sourceId, distance, weight, status, pathList));
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
 			
 			// extend to adjacent vertices
-			if (pathList.size() < 4) {
+			//if (pathList.size() < 4) {
 				for (String id: adjList) {
 					status = "active";
 					targetId = id;
 					adjList = new ArrayList<String>();
 					try {
-						context.write(new Text(targetId), valueText(sourceId, distance, weight, status, pathList, adjList));
+						context.write(new Text(targetId), valueText(sourceId, distance, weight, status, pathList));
 					} catch (Exception e) {
 						e.printStackTrace();
 					}
@@ -74,11 +94,11 @@ public class Mapper1 extends Mapper<Object, Text, Text, Text> {
 					// TODO Auto-generated catch block
 					e1.printStackTrace();
 				}
-			}
+			//}
 		}
 	}
 	
-	public Text valueText(String sourceId, long distance, long weight, String status, List<String> pathList, List<String> adjList) {
+	public Text valueText(String sourceId, long distance, long weight, String status, List<String> pathList) {
 		StringBuilder sb = new StringBuilder();
 		
 		sb.append(sourceId);
@@ -94,15 +114,6 @@ public class Mapper1 extends Mapper<Object, Text, Text, Text> {
 		for (int i = 0; i < pathList.size(); i++) {
 			sb.append(pathList.get(i));
 			if (i < pathList.size() - 1)
-				sb.append(',');
-		}
-		sb.append(']');
-		sb.append(' ');
-		
-		sb.append('[');
-		for (int i = 0; i < adjList.size(); i++) {
-			sb.append(adjList.get(i));
-			if (i < adjList.size() - 1)
 				sb.append(',');
 		}
 		sb.append(']');

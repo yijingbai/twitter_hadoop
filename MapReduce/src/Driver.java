@@ -1,10 +1,18 @@
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FSDataInputStream;
+import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.DoubleWritable;
@@ -33,7 +41,6 @@ public class Driver {
 			allPathFound = false;
 			int inner = 1;
 			while (!allPathFound) {
-			//for (int i = 0; i < 5; i++) {
 				allPathFound = job1(outputPath0, outputPath1);
 				job2(outputPath1, outputPath2);
 				outputPath0 = outputPath2;
@@ -62,12 +69,13 @@ public class Driver {
 		}
 		
 		// job6 is to generate output for visualization (after detecting community)
+		Path adjListPath = new Path("./result");
 		Path outputPath6 = new Path(args[1] + "/output6");
-		job6(outputPath2, outputPath6);
+		job6(adjListPath, outputPath6);
 		
 		// start to group users into community
 		Path outputPath7 = new Path(args[1] + "/output7");
-		job7(outputPath2, outputPath7);
+		job7(adjListPath, outputPath7);
 		
 		Path outputPath8 = new Path(args[1] + "/output8");
 		Path outputPath9 = new Path(args[1] + "/output9");
@@ -97,6 +105,7 @@ public class Driver {
 		
 		FileSystem fs = FileSystem.get(new URI(outputPath.toString()), conf);
 		fs.delete(outputPath);
+		fs.delete(new Path("./result/adjList"));
 		FileInputFormat.addInputPath(job, inputPath);
 		FileOutputFormat.setOutputPath(job, outputPath);
 		
@@ -108,11 +117,11 @@ public class Driver {
 		Job job = Job.getInstance(conf, "building path");
 		job.setJarByClass(Driver.class);
 		job.setMapperClass(Mapper1.class);
-		job.setReducerClass(Reducer1.class);
+		//job.setReducerClass(Reducer1.class);
 		job.setMapOutputKeyClass(Text.class);
 		job.setMapOutputValueClass(Text.class);
-		job.setOutputKeyClass(Text.class);
-		job.setOutputValueClass(Text.class);
+		//job.setOutputKeyClass(Text.class);
+		//job.setOutputValueClass(Text.class);
 		
 		FileSystem fs = FileSystem.get(new URI(outputPath.toString()), conf);
 		fs.delete(outputPath);
@@ -203,8 +212,57 @@ public class Driver {
 		FileOutputFormat.setOutputPath(job, outputPath);
 		
 		System.out.println(job.waitForCompletion(true) ? "Success" : "Fail");
-		Path p = new Path("./selectedEdges");
-		fs.delete(p);
+		
+		HashMap<String, Set<String>> map = new HashMap<>();
+		try {
+			Path p = new Path("./selectedEdges");
+			FSDataInputStream in = fs.open(p);
+			BufferedReader br = new BufferedReader(new InputStreamReader(in, "UTF-8"));
+			String line;
+			
+			while ((line = br.readLine()) != null) {
+				String[] s = line.split(",");
+				if (!map.containsKey(s[0]))
+					map.put(s[0], new HashSet<String>());
+				map.get(s[0]).add(s[1]);
+			}
+			br.close();
+			fs.delete(p);
+		} catch (IOException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		}
+		
+		try {
+			Path p = new Path("./result/adjList");
+			Path newp = new Path("./result/adjListUpdated");
+			fs.createNewFile(newp);
+			FSDataInputStream in = fs.open(p);
+			FSDataOutputStream out = fs.append(newp);
+			BufferedReader br = new BufferedReader(new InputStreamReader(in, "UTF-8"));
+			BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(out, "UTF-8"));
+			String line;			
+			while ((line = br.readLine()) != null) {
+				String[] users = line.split(" |,");
+				if (!map.containsKey(users[0])) {
+					bw.write(line);
+				} else {
+					bw.write(users[0]);
+					for (int i = 1; i < users.length; i++) {
+						if (!map.get(users[0]).contains(users[i]))
+							bw.write(" " + users[i]);
+					}
+					bw.write("\n");
+				}
+			}
+			br.close();
+			bw.close();
+			fs.delete(p);
+			fs.rename(newp, p);
+		} catch (IOException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		}
 	}
 	
 	private static void job6(Path inputPath, Path outputPath) throws Exception {
@@ -212,11 +270,11 @@ public class Driver {
 		Job job = Job.getInstance(conf, "generating output for visualization");
 		job.setJarByClass(Driver.class);
 		job.setMapperClass(Mapper6.class);
-		job.setReducerClass(Reducer6.class);
+		//job.setReducerClass(Reducer6.class);
 		job.setMapOutputKeyClass(Text.class);
 		job.setMapOutputValueClass(Text.class);
-		job.setOutputKeyClass(Text.class);
-		job.setOutputValueClass(Text.class);
+		//job.setOutputKeyClass(Text.class);
+		//job.setOutputValueClass(Text.class);
 		
 		FileSystem fs = FileSystem.get(new URI(outputPath.toString()), conf);
 		fs.delete(outputPath);
@@ -295,11 +353,11 @@ public class Driver {
 		conf.setLong("communityNum", 0);
 		job.setJarByClass(Driver.class);
 		job.setMapperClass(Mapper10.class);
-		//job.setReducerClass(Reducer10.class);
-		job.setMapOutputKeyClass(LongWritable.class);
+		job.setReducerClass(Reducer10.class);
+		job.setMapOutputKeyClass(Text.class);
 		job.setMapOutputValueClass(Text.class);
-		//job.setOutputKeyClass(Text.class);
-		//job.setOutputValueClass(Text.class);
+		job.setOutputKeyClass(Text.class);
+		job.setOutputValueClass(Text.class);
 		
 		FileSystem fs = FileSystem.get(new URI(outputPath.toString()), conf);
 		fs.delete(outputPath);

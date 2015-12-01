@@ -11,102 +11,24 @@ import org.apache.hadoop.mapreduce.Reducer;
 import org.apache.hadoop.mapreduce.Reducer.Context;
 
 
+// remove duplicate
 public class Reducer5 extends Reducer<Text, Text, Text, Text> {
 	public void reduce(Text key, Iterable<Text> value, Context context) {
-		// iterate twice
-//		MarkableIterator<Text> iter = new MarkableIterator<Text>(value.iterator());	
-//		String adjListStr = "[]";
-//		
-//		try {
-//			iter.mark();
-//		} catch (IOException e1) {
-//			// TODO Auto-generated catch block
-//			e1.printStackTrace();
-//		}
-//		while (iter.hasNext()) {
-//			String[] str = iter.next().toString().split(" ");
-//			if (!str[5].equals("[]")) {
-//				adjListStr = str[5];
-//				break;
-//			}
-//		}
-//		
-//		try {
-//			iter.reset();
-//		} catch (IOException e1) {
-//			// TODO Auto-generated catch block
-//			e1.printStackTrace();
-//		}
-//		boolean emitted = false;
-//		while (iter.hasNext()) {
-//			Text text = iter.next();
-//			String[] str = text.toString().split(" ");
-//			if (key.toString().equals(str[0])) {
-//				if (!emitted) {
-//					try {
-//						context.write(key, valueText(str, adjListStr));
-//					} catch (Exception e) {
-//						e.printStackTrace();
-//					}
-//					emitted = true;
-//				}
-//			} else {
-//				try {
-//					context.write(key, text);
-//				} catch (Exception e) {
-//					e.printStackTrace();
-//				}
-//			}
-//		}
+		Iterator<Text> iter = value.iterator();	
 		
-		
-		// using cache
-		Iterator<Text> iter = value.iterator();
-		
-		HashSet<String> cache = new HashSet<String>();
-		String adjListStr = "[]";
-		
+		boolean emitted = false;
 		while (iter.hasNext()) {
-			String s = iter.next().toString();
-			String[] str = s.split(" ");
-			cache.add(s);
-			if (!str[5].equals("[]")) {
-				adjListStr = str[5];
-				break;
-			}
-		}
-		
-		while (iter.hasNext()) {
-			String s = iter.next().toString();
-			String[] str = s.split(" ");
-			if (!cache.contains(s)) {
-				if (str[5].equals("[]")) {
-					try {
-						context.write(key, valueText(str, adjListStr));
-					} catch (Exception e) {
-						e.printStackTrace();
-					}
-				} else {
-					try {
-						context.write(key, new Text(s));
-					} catch (Exception e) {
-						e.printStackTrace();
-					}
-				}
-			}
-		}
-		
-		for (String s: cache) {
-			String[] str = s.split(" ");
-			if (str[5].equals("[]")) {
+			String[] str = iter.next().toString().split(" ");
+			if (str[4].equals("[]") && !emitted) {
 				try {
-					context.write(key, valueText(str, adjListStr));
+					context.write(key, valueText(str));
 				} catch (Exception e) {
 					e.printStackTrace();
 				}
-			} else {
+				emitted = true;
+			} else if (!str[4].equals("[]")){
 				try {
-					context.write(key, new Text(s));
+					context.write(key, valueText(str));
 				} catch (Exception e) {
 					e.printStackTrace();
 				}
@@ -114,14 +36,13 @@ public class Reducer5 extends Reducer<Text, Text, Text, Text> {
 		}
 	}
 	
-	public Text valueText(String[] str, String adjListStr) {
+	public Text valueText(String[] str) {
 		StringBuilder sb = new StringBuilder();
 		
-		for (int i = 0; i < str.length - 1; i++) {
+		for (int i = 0; i < str.length; i++) {
 			sb.append(str[i]);
 			sb.append(' ');
 		}
-		sb.append(adjListStr);
 		
 		return new Text(sb.toString());
 	}

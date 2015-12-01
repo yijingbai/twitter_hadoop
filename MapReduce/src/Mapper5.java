@@ -23,17 +23,12 @@ public class Mapper5 extends Mapper<Object, Text, Text, Text> {
 		
 		String targetId = str[0], sourceId = str[1];
 		List<String> pathList = new ArrayList<String>();
-		List<String> adjList = new ArrayList<String>();
 		HashMap<String, Set<String>> map = new HashMap<>();
 		
 		StringTokenizer st;
 		st = new StringTokenizer(str[5].substring(1, str[5].length() - 1), ",");
 		while (st.hasMoreTokens()) {
 			pathList.add(st.nextToken());
-		}
-		st = new StringTokenizer(str[6].substring(1, str[6].length() - 1), ",");
-		while (st.hasMoreTokens()) {
-			adjList.add(st.nextToken());
 		}
 		
 		try {
@@ -54,12 +49,6 @@ public class Mapper5 extends Mapper<Object, Text, Text, Text> {
 			// TODO Auto-generated catch block
 			e1.printStackTrace();
 		}
-				
-		if (map.containsKey(targetId)) {
-			for (String user: map.get(targetId))
-				adjList.remove(user);
-			System.out.println(adjList.toString());
-		}
 		
 		boolean remove = false;
 		for (int i = 0; i < pathList.size() - 1; i++) {
@@ -79,28 +68,20 @@ public class Mapper5 extends Mapper<Object, Text, Text, Text> {
 		
 		if (!remove) {
 			try {
-				context.write(new Text(targetId), valueText(str, adjList));
+				context.write(new Text(targetId), valueText(str));
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
 		}
 	}
 	
-	public Text valueText(String[] str, List<String> adjList) {
+	public Text valueText(String[] str) {
 		StringBuilder sb = new StringBuilder();
 		
-		for (int i = 1; i < str.length - 1; i++) {
+		for (int i = 1; i < str.length; i++) {
 			sb.append(str[i]);
 			sb.append(' ');
 		}
-		
-		sb.append('[');
-		for (int i = 0; i < adjList.size(); i++) {
-			sb.append(adjList.get(i));
-			if (i < adjList.size() - 1)
-				sb.append(',');
-		}
-		sb.append(']');
 		
 		return new Text(sb.toString());
 	}
@@ -115,9 +96,6 @@ public class Mapper5 extends Mapper<Object, Text, Text, Text> {
 		sb.append("1");
 		sb.append(' ');
 		sb.append("active");
-		sb.append(' ');
-		sb.append('[');
-		sb.append(']');
 		sb.append(' ');
 		sb.append('[');
 		sb.append(']');

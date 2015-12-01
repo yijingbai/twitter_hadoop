@@ -25,7 +25,7 @@ public class Reducer4 extends Reducer<Text, Text, Text, DoubleWritable> {
 		double threshold = 3.0;
 //		double max = 0;
 		
-		int K = 5000;
+		int K = 100;
 		PriorityQueue<Pair> pq = new PriorityQueue<>(K, new PairComparator());
 //		List<String> sourceSelected = new ArrayList<String>();
 //		List<String> targetSelected = new ArrayList<String>();

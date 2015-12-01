@@ -1,8 +1,13 @@
+import java.io.BufferedWriter;
 import java.io.IOException;
+import java.io.OutputStreamWriter;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
+import org.apache.hadoop.fs.FSDataOutputStream;
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Reducer;
 import org.apache.hadoop.mapreduce.Reducer.Context;
@@ -25,13 +30,32 @@ public class Reducer0 extends Reducer<Text, Text, Text, Text> {
 		}
 		
 		try {
-			context.write(key, valueText(targetId, adjList));
+			context.write(key, valueText(targetId));
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
+		
+		try {
+			Path p = new Path("./result/adjList");
+			FileSystem fs = FileSystem.get(context.getConfiguration());
+			if (!fs.exists(p))
+				fs.createNewFile(p);
+			FSDataOutputStream out = fs.append(p);
+			BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(out, "UTF-8"));
+			bw.write(targetId + " ");
+			for (int i = 0; i < adjList.size(); i++) {
+				bw.write(adjList.get(i));
+				if (i < adjList.size() - 1)
+					bw.write(',');
+			}
+			bw.write("\n");
+			bw.close();
+		} catch (Exception e1) {
+			e1.printStackTrace();
+		}
 	}
 	
-	public Text valueText(String targetId, List<String> adjList) {
+	public Text valueText(String targetId) {
 		StringBuilder sb = new StringBuilder();
 		
 		sb.append(targetId);
@@ -43,14 +67,6 @@ public class Reducer0 extends Reducer<Text, Text, Text, Text> {
 		sb.append("active");
 		sb.append(' ');
 		sb.append("[]");
-		sb.append(' ');
-		sb.append('[');
-		for (int i = 0; i < adjList.size(); i++) {
-			sb.append(adjList.get(i));
-			if (i < adjList.size() - 1)
-				sb.append(',');
-		}
-		sb.append(']');
 		
 		return new Text(sb.toString());
 	}
