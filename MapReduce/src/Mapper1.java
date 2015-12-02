@@ -6,8 +6,10 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map.Entry;
 import java.util.StringTokenizer;
 
+import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -39,13 +41,14 @@ public class Mapper1 extends Mapper<Object, Text, Text, Text> {
 		}
 		
 		try {
-			Path p = new Path("./result/adjList");
+			String pathname = context.getConfiguration().get("pathname");
+			Path p = new Path(pathname);
 			FileSystem fs = FileSystem.get(context.getConfiguration());
 			FSDataInputStream in = fs.open(p);
 			BufferedReader br = new BufferedReader(new InputStreamReader(in, "UTF-8"));
 			String line;			
 			while ((line = br.readLine()) != null) {
-				String[] users = line.split(" |,");
+				String[] users = line.split(" |\\t|,");
 				if (users[0].equals(targetId)) {
 					for (int i = 1; i < users.length; i++)
 						adjList.add(users[i]);
@@ -58,7 +61,7 @@ public class Mapper1 extends Mapper<Object, Text, Text, Text> {
 			e1.printStackTrace();
 		}
 		
-		System.out.println(adjList);
+		//System.out.println(adjList);
 		
 		if (status.equals("inactive")) {
 			try {

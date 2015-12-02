@@ -22,34 +22,10 @@ public class Reducer0 extends Reducer<Text, Text, Text, Text> {
 		Iterator<Text> iter = value.iterator();
 		
 		String targetId = key.toString();
-		List<String> adjList = new ArrayList<String>();
-		
-		while (iter.hasNext()) {
-			String followingId = iter.next().toString();
-			adjList.add(followingId);
-		}
-		
 		try {
 			context.write(key, valueText(targetId));
 		} catch (Exception e) {
 			e.printStackTrace();
-		}
-		
-		try {
-			Path p = new Path("./result/adjList");
-			FileSystem fs = FileSystem.get(context.getConfiguration());
-			FSDataOutputStream out = fs.append(p);
-			BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(out, "UTF-8"));
-			bw.write(targetId + " ");
-			for (int i = 0; i < adjList.size(); i++) {
-				bw.write(adjList.get(i));
-				if (i < adjList.size() - 1)
-					bw.write(',');
-			}
-			bw.write("\n");
-			bw.close();
-		} catch (Exception e1) {
-			e1.printStackTrace();
 		}
 	}
 	

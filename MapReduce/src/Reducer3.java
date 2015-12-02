@@ -23,12 +23,9 @@ public class Reducer3 extends Reducer<Text, Text, Text, DoubleWritable> {
 	public void reduce(Text key, Iterable<Text> value, Context context) {
 		Iterator<Text> iter = value.iterator();
 		double threshold = 3.0;
-//		double max = 0;
 		
-		int K = 100;
+		int K = 200;
 		PriorityQueue<Pair> pq = new PriorityQueue<>(K, new PairComparator());
-//		List<String> sourceSelected = new ArrayList<String>();
-//		List<String> targetSelected = new ArrayList<String>();
 		
 		while (iter.hasNext()) {
 			String str[] = iter.next().toString().split(" |\\t|,");
@@ -45,16 +42,6 @@ public class Reducer3 extends Reducer<Text, Text, Text, DoubleWritable> {
 						pq.add(pair);
 					}
 				}
-//				if (edgeBetweenness > max) {
-//					sourceSelected.clear();
-//					targetSelected.clear();
-//					sourceSelected.add(source);
-//					targetSelected.add(target);
-//					max = edgeBetweenness;
-//				} else if (edgeBetweenness == max) {
-//					sourceSelected.add(source);
-//					targetSelected.add(target);
-//				}
 			}
 		}
 		
@@ -63,9 +50,7 @@ public class Reducer3 extends Reducer<Text, Text, Text, DoubleWritable> {
 			String s = pair.source;
 			String t = pair.target;
 			double e = pair.edgeBetweenness;
-//		for (int i = 0; i < sourceSelected.size(); i++) {
-//			String s = sourceSelected.get(i);
-//			String t = targetSelected.get(i);
+			
 			try {
 				context.write(keyText(s, t), new DoubleWritable(e));
 			} catch (Exception e1) {
