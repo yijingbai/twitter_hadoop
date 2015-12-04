@@ -22,9 +22,9 @@ import org.apache.hadoop.mapreduce.Reducer.Context;
 public class Reducer3 extends Reducer<Text, Text, Text, DoubleWritable> {
 	public void reduce(Text key, Iterable<Text> value, Context context) {
 		Iterator<Text> iter = value.iterator();
-		double threshold = 3.0;
+		double threshold = 100.0;
 		
-		int K = 200;
+		int K = 10000;
 		PriorityQueue<Pair> pq = new PriorityQueue<>(K, new PairComparator());
 		
 		while (iter.hasNext()) {
@@ -53,19 +53,6 @@ public class Reducer3 extends Reducer<Text, Text, Text, DoubleWritable> {
 			
 			try {
 				context.write(keyText(s, t), new DoubleWritable(e));
-			} catch (Exception e1) {
-				e1.printStackTrace();
-			}
-			
-			try {
-				Path p = new Path("./selectedEdges");
-				FileSystem fs = FileSystem.get(context.getConfiguration());
-				if (!fs.exists(p))
-					fs.createNewFile(p);
-				FSDataOutputStream out = fs.append(p);
-				BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(out, "UTF-8"));
-				bw.write(s + "," + t + "\n");
-				bw.close();
 			} catch (Exception e1) {
 				e1.printStackTrace();
 			}

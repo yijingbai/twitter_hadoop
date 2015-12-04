@@ -40,25 +40,12 @@ public class Mapper1 extends Mapper<Object, Text, Text, Text> {
 			pathList.add(st.nextToken());
 		}
 		
-		try {
-			String pathname = context.getConfiguration().get("pathname");
-			Path p = new Path(pathname);
-			FileSystem fs = FileSystem.get(context.getConfiguration());
-			FSDataInputStream in = fs.open(p);
-			BufferedReader br = new BufferedReader(new InputStreamReader(in, "UTF-8"));
-			String line;			
-			while ((line = br.readLine()) != null) {
-				String[] users = line.split(" |\\t|,");
-				if (users[0].equals(targetId)) {
-					for (int i = 1; i < users.length; i++)
-						adjList.add(users[i]);
-					break;
-				}
+		String s = context.getConfiguration().get(targetId);
+		if (s != null) {
+			st = new StringTokenizer(s, ",");
+			while (st.hasMoreTokens()) {
+				adjList.add(st.nextToken());
 			}
-			br.close();
-		} catch (IOException e1) {
-			// TODO Auto-generated catch block
-			e1.printStackTrace();
 		}
 		
 		//System.out.println(adjList);
@@ -84,7 +71,6 @@ public class Mapper1 extends Mapper<Object, Text, Text, Text> {
 				for (String id: adjList) {
 					status = "active";
 					targetId = id;
-					adjList = new ArrayList<String>();
 					try {
 						context.write(keyText(targetId, sourceId), valueText(distance, weight, status, pathList));
 					} catch (Exception e) {
@@ -93,8 +79,11 @@ public class Mapper1 extends Mapper<Object, Text, Text, Text> {
 				}
 				
 				try {
+					String pathname = context.getConfiguration().get("pathname");
 					FileSystem fs = FileSystem.get(context.getConfiguration());
-					fs.createNewFile(new Path("./notAllPathFound"));
+					Path p = new Path(pathname);
+					if (!fs.exists(p))
+						fs.createNewFile(p);
 				} catch (IOException e1) {
 					// TODO Auto-generated catch block
 					e1.printStackTrace();

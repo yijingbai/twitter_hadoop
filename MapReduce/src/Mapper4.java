@@ -23,7 +23,6 @@ public class Mapper4 extends Mapper<Object, Text, Text, Text> {
 		
 		String targetId = str[0], sourceId = str[1];
 		List<String> pathList = new ArrayList<String>();
-		HashMap<String, Set<String>> map = new HashMap<>();
 		
 		StringTokenizer st;
 		st = new StringTokenizer(str[5].substring(1, str[5].length() - 1), ",");
@@ -31,38 +30,27 @@ public class Mapper4 extends Mapper<Object, Text, Text, Text> {
 			pathList.add(st.nextToken());
 		}
 		
-		try {
-			Path p = new Path("./selectedEdges");
-			FileSystem fs = FileSystem.get(context.getConfiguration());
-			FSDataInputStream in = fs.open(p);
-			BufferedReader br = new BufferedReader(new InputStreamReader(in, "UTF-8"));
-			String line;
-			
-			while ((line = br.readLine()) != null) {
-				String[] s = line.split(",");
-				if (!map.containsKey(s[0]))
-					map.put(s[0], new HashSet<String>());
-				map.get(s[0]).add(s[1]);
-			}
-			br.close();
-		} catch (IOException e1) {
-			// TODO Auto-generated catch block
-			e1.printStackTrace();
-		}
-		
 		boolean remove = false;
 		for (int i = 0; i < pathList.size() - 1; i++) {
-			String s = pathList.get(i);
-			String t = pathList.get(i + 1);
+			String source = pathList.get(i);
+			String target = pathList.get(i + 1);
 			
-			if (map.containsKey(s) && map.get(s).contains(t)) {
-				try {
-					context.write(new Text(sourceId), valueText(sourceId));
-				} catch (Exception e) {
-					e.printStackTrace();
+			String s = context.getConfiguration().get(source);
+			if (s != null) {
+				Set<String> set = new HashSet<>();
+				String[] users = s.split(",");
+				for (String user: users)
+					set.add(user);
+			
+				if (set.contains(target)) {
+					try {
+						context.write(new Text(sourceId), valueText(sourceId));
+					} catch (Exception e) {
+						e.printStackTrace();
+					}
+					remove = true;
+					break;
 				}
-				remove = true;
-				break;
 			}
 		}
 		

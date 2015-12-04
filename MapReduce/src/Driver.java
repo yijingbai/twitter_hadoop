@@ -69,8 +69,8 @@ public class Driver {
 			if (!isSelected)
 				break;
 			
-			job4(outputPath0, outputPath4);
-			job_adj2(outputPath_adj1, outputPath_adj2);
+			job4(outputPath0, outputPath4, outputPath3);
+			job_adj2(outputPath_adj1, outputPath_adj2, outputPath3);
 			temp = outputPath0;
 			outputPath0 = outputPath4;
 			outputPath4 = temp;
@@ -140,18 +140,34 @@ public class Driver {
 		System.out.println(job.waitForCompletion(true) ? "Success" : "Fail");
 		
 		FileStatus[] files = fs.listStatus(outputPath);
-		Path[] paths = new Path[files.length - 1];
+		List<Path> paths = new ArrayList<>();
 		Path p = new Path(outputPath.toString() + "/adjList");
-		for (int i = 0; i < files.length - 1; i++)
-			paths[i] = files[i + 1].getPath();
+		for (int i = 0; i < files.length; i++) {
+			if (files[i].getLen() != 0)
+				paths.add(files[i].getPath());
+		}
 		fs.delete(p);
 		fs.createNewFile(p);
-		fs.concat(p, paths);
+		if (paths.size() > 0)
+			fs.concat(p, paths.toArray(new Path[paths.size()]));
 	}
 	
 	private static boolean job1(Path inputPath, Path outputPath, Path outputPath_adj) throws Exception {
 		Configuration conf = new Configuration();
-		conf.set("pathname", outputPath_adj.toString() + "/adjList");
+		
+		FileSystem fs = FileSystem.get(new URI(outputPath.toString()), conf);
+		Path p = new Path(outputPath_adj.toString() + "/adjList");
+		FSDataInputStream in = fs.open(p);
+		BufferedReader br = new BufferedReader(new InputStreamReader(in, "UTF-8"));	
+		String line;			
+		while ((line = br.readLine()) != null) {
+			String[] users = line.split(" |\\t");
+			if (users.length > 1)
+				conf.set(users[0], users[1]);
+		}
+		br.close();
+		
+		conf.set("pathname", outputPath.toString() + "/notAllPathFound");
 		Job job = Job.getInstance(conf, "finding shortest paths");
 		job.setJarByClass(Driver.class);
 		job.setMapperClass(Mapper1.class);
@@ -161,13 +177,13 @@ public class Driver {
 		job.setOutputKeyClass(Text.class);
 		job.setOutputValueClass(Text.class);
 		
-		FileSystem fs = FileSystem.get(new URI(outputPath.toString()), conf);
 		fs.delete(outputPath);
 		FileInputFormat.addInputPath(job, inputPath);
 		FileOutputFormat.setOutputPath(job, outputPath);
 		
 		System.out.println(job.waitForCompletion(true) ? "Success" : "Fail");
-		Path p = new Path("./notAllPathFound");
+		
+		p = new Path(outputPath.toString() +"/notAllPathFound");
 		boolean allPathFound = !fs.exists(p);
 		fs.delete(p);
 		return allPathFound;
@@ -209,13 +225,35 @@ public class Driver {
 		FileOutputFormat.setOutputPath(job, outputPath);
 		
 		System.out.println(job.waitForCompletion(true) ? "Success" : "Fail");
-		Path p = new Path("./selectedEdges");
-		boolean isSelected = fs.exists(p);
-		return isSelected;
+		
+		FileStatus[] files = fs.listStatus(outputPath);
+		List<Path> paths = new ArrayList<>();
+		Path p = new Path(outputPath.toString() + "/selectedEdges");
+		for (int i = 0; i < files.length; i++) {
+			if (files[i].getLen() != 0)
+				paths.add(files[i].getPath());
+		}
+		fs.delete(p);
+		fs.createNewFile(p);
+		if (paths.size() > 0)
+			fs.concat(p, paths.toArray(new Path[paths.size()]));
+		return (fs.getFileStatus(p).getLen() > 0);
 	}
 	
-	private static void job4(Path inputPath, Path outputPath) throws Exception {
+	private static void job4(Path inputPath, Path outputPath, Path outputPath_edges) throws Exception {
 		Configuration conf = new Configuration();
+		
+		FileSystem fs = FileSystem.get(new URI(outputPath.toString()), conf);
+		Path p = new Path(outputPath_edges.toString() + "/selectedEdges");
+		FSDataInputStream in = fs.open(p);
+		BufferedReader br = new BufferedReader(new InputStreamReader(in, "UTF-8"));	
+		String line;			
+		while ((line = br.readLine()) != null) {
+			String[] users = line.split(" |\\t|,");
+			conf.set(users[0], users[1]);
+		}
+		br.close();
+		
 		Job job = Job.getInstance(conf, "removing edges in pathList");
 		job.setJarByClass(Driver.class);
 		job.setMapperClass(Mapper4.class);
@@ -225,7 +263,6 @@ public class Driver {
 		job.setOutputKeyClass(Text.class);
 		job.setOutputValueClass(Text.class);
 		
-		FileSystem fs = FileSystem.get(new URI(outputPath.toString()), conf);
 		fs.delete(outputPath);
 		FileInputFormat.addInputPath(job, inputPath);
 		FileOutputFormat.setOutputPath(job, outputPath);
@@ -233,15 +270,40 @@ public class Driver {
 		System.out.println(job.waitForCompletion(true) ? "Success" : "Fail");
 	}
 	
-	private static void job_adj2(Path inputPath, Path outputPath) throws Exception {
+	private static void job_adj2(Path inputPath, Path outputPath, Path outputPath_edges) throws Exception {
 		Configuration conf = new Configuration();
+		
+		FileSystem fs = FileSystem.get(new URI(outputPath.toString()), conf);
+		Path p = new Path(outputPath_edges.toString() + "/selectedEdges");
+		FSDataInputStream in = fs.open(p);
+		BufferedReader br = new BufferedReader(new InputStreamReader(in, "UTF-8"));
+		HashMap<String, Set<String>> map = new HashMap<>();
+		String line;
+		while ((line = br.readLine()) != null) {
+			String[] pair = line.split(" |\\t|,");
+			if (!map.containsKey(pair[0]))
+				map.put(pair[0], new HashSet<String>());
+			map.get(pair[0]).add(pair[1]);
+		}
+		br.close();
+		
+		for (String source: map.keySet()) {
+			StringBuilder sb = new StringBuilder();
+			for (String user: map.get(source)) {
+				sb.append(user);
+				sb.append(',');
+			}
+			if (sb.length() > 0)
+				sb.deleteCharAt(sb.length() - 1);
+			conf.set(source, sb.toString());
+		}
+		
 		Job job = Job.getInstance(conf, "removing edges in adjList");
 		job.setJarByClass(Driver.class);
 		job.setMapperClass(Mapper_adj2.class);
 		job.setMapOutputKeyClass(Text.class);
 		job.setMapOutputValueClass(Text.class);
 		
-		FileSystem fs = FileSystem.get(new URI(outputPath.toString()), conf);
 		fs.delete(outputPath);
 		FileInputFormat.addInputPath(job, inputPath);
 		FileOutputFormat.setOutputPath(job, outputPath);
@@ -249,14 +311,16 @@ public class Driver {
 		System.out.println(job.waitForCompletion(true) ? "Success" : "Fail");
 		
 		FileStatus[] files = fs.listStatus(outputPath);
-		Path[] paths = new Path[files.length - 1];
-		Path p = new Path(outputPath.toString() + "/adjList");
-		for (int i = 0; i < files.length - 1; i++)
-			paths[i] = files[i + 1].getPath();
+		List<Path> paths = new ArrayList<>();
+		p = new Path(outputPath.toString() + "/adjList");
+		for (int i = 0; i < files.length; i++) {
+			if (files[i].getLen() != 0)
+				paths.add(files[i].getPath());
+		}
 		fs.delete(p);
 		fs.createNewFile(p);
-		fs.concat(p, paths);
-		fs.delete(new Path("./selectedEdges"));
+		if (paths.size() > 0)
+			fs.concat(p, paths.toArray(new Path[paths.size()]));
 	}
 	
 	private static void job5(Path inputPath, Path outputPath) throws Exception {
